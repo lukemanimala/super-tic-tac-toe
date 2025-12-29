@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Tic Tac Toe - AI Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            transition: background 1s ease;
+        }
+
+        .game-container {
+            text-align: center;
+        }
+
+        h1 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-weight: 700;
+        }
+
+        .mode-selection {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .mode-selection h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .mode-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .mode-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        }
+
+        .game-info {
+            color: white;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            min-height: 30px;
+            font-weight: 700;
+        }
+
+        .macro-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .macro-board.disabled {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .micro-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            background: white;
+            padding: 8px;
+            border-radius: 10px;
+            width: 150px;
+            height: 150px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .micro-board.active {
+            box-shadow: 0 0 0 4px #4CAF50;
+            transform: scale(1.05);
+        }
+
+        .micro-board.inactive {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .micro-board.won {
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .micro-board.draw {
+            background: rgba(158, 158, 158, 0.2);
+        }
+
+        .cell {
+            background: #f0f0f0;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 0;
+            min-height: 0;
+            aspect-ratio: 1;
+        }
+
+        .cell:hover:not(.filled) {
+            background: #e0e0e0;
+            transform: scale(1.1);
+        }
+
+        .cell.filled {
+            cursor: not-allowed;
+        }
+
+        .cell.x {
+            color: #e74c3c;
+        }
+
+        .cell.o {
+            color: #3498db;
+        }
+
+        .cell.ai-move {
+            animation: aiMoveFlash 1s ease;
+        }
+
+        @keyframes aiMoveFlash {
+            0%, 100% { background: #f0f0f0; }
+            25% { background: #ffd700; transform: scale(1.3); }
+            50% { background: #ffed4e; transform: scale(1.2); }
+            75% { background: #ffd700; transform: scale(1.3); }
+        }
+
+        .micro-board-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 80px;
+            font-weight: 700;
+            border-radius: 10px;
+            pointer-events: none;
+        }
+
+        .micro-board-overlay.x {
+            color: #e74c3c;
+            background: rgba(231, 76, 60, 0.1);
+        }
+
+        .micro-board-overlay.o {
+            color: #3498db;
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        .win-line {
+            position: absolute;
+            background: rgba(255, 215, 0, 0.8);
+            pointer-events: none;
+            z-index: 10;
+            animation: winLineGrow 0.6s ease-out;
+        }
+
+        @keyframes winLineGrow {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .controls {
+            margin-top: 20px;
+        }
+
+        button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        }
+
+        .rules {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            max-width: 600px;
+            text-align: left;
+        }
+
+        .rules h2 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .rules ul {
+            margin-left: 20px;
+        }
+
+        .rules li {
+            margin: 8px 0;
+            color: #333;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Super Tic Tac Toe</h1>
+
+        <div class="mode-selection" id="modeSelection">
+            <h2>Select Game Mode</h2>
+            <div class="mode-buttons">
+                <button class="mode-button" onclick="startGame('2player')">2 Players</button>
+                <button class="mode-button" onclick="startGame('ai-easy')">vs AI (Easy)</button>
+                <button class="mode-button" onclick="startGame('ai-hard')">vs AI (Hard)</button>
+                <button class="mode-button" onclick="startGame('ai-extreme')">vs AI (EXTREME)</button>
+            </div>
+        </div>
+
+        <div id="gameArea" class="hidden">
+            <div class="game-info" id="gameInfo">Player X's turn - Play anywhere</div>
+
+            <div class="macro-board" id="macroBoard"></div>
+
+            <div class="controls">
+                <button onclick="resetToMenu()">Back to Menu</button>
+            </div>
+        </div>
+
+        <div class="rules">
+            <h2>How to Play</h2>
+            <ul>
+                <li>Each cell contains a mini Tic Tac Toe board</li>
+                <li>Your move position determines where your opponent plays next</li>
+                <li>Win mini boards to claim them on the macro board</li>
+                <li>Get 3 macro board cells in a row to win!</li>
+                <li>If sent to a won/full board, you can play anywhere</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let currentPlayer = 'X';
+        let activeBoard = null;
+        let macroState = Array(9).fill(null);
+        let microBoards = Array(9).fill(null).map(() => Array(9).fill(null));
+        let gameOver = false;
+        let gameMode = null;
+        let aiPlayer = 'O';
+        let turnCount = 0;
+
+        // Rainbow gradients for background
+        const rainbowGradients = [
+            'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+            'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+            'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+            'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+            'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+            'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+            'linear-gradient(135deg, #ff6e7f 0%, #bfe9ff 100%)',
+        ];
+
+        // Sound Effects using Web Audio API
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            switch(type) {
+                case 'playerMove':
+                    oscillator.frequency.value = 523.25; // C5
+                    oscillator.type = 'sine';
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                    break;
+
+                case 'aiMove':
+                    oscillator.frequency.value = 392.00; // G4
+                    oscillator.type = 'triangle';
+                    gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.15);
+                    break;
+
+                case 'microWin':
+                    // Ascending chord
+                    [261.63, 329.63, 392.00].forEach((freq, i) => {
+                        const osc = audioContext.createOscillator();
+                        const gain = audioContext.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioContext.destination);
+                        osc.frequency.value = freq;
+                        osc.type = 'sine';
+                        gain.gain.setValueAtTime(0.2, audioContext.currentTime + i * 0.1);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.1 + 0.3);
+                        osc.start(audioContext.currentTime + i * 0.1);
+                        osc.stop(audioContext.currentTime + i * 0.1 + 0.3);
+                    });
+                    return;
+
+                case 'macroWin':
+                    // Victory fanfare
+                    const notes = [523.25, 659.25, 783.99, 1046.50];
+                    notes.forEach((freq, i) => {
+                        const osc = audioContext.createOscillator();
+                        const gain = audioContext.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioContext.destination);
+                        osc.frequency.value = freq;
+                        osc.type = 'square';
+                        gain.gain.setValueAtTime(0.15, audioContext.currentTime + i * 0.15);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.15 + 0.4);
+                        osc.start(audioContext.currentTime + i * 0.15);
+                        osc.stop(audioContext.currentTime + i * 0.15 + 0.4);
+                    });
+                    return;
+            }
+        }
+
+        function updateBackgroundGradient() {
+            const gradientIndex = turnCount % rainbowGradients.length;
+            document.body.style.background = rainbowGradients[gradientIndex];
+        }
+
+        function startGame(mode) {
+            gameMode = mode;
+            document.getElementById('modeSelection').classList.add('hidden');
+            document.getElementById('gameArea').classList.remove('hidden');
+            resetGame();
+        }
+
+        function resetToMenu() {
+            document.getElementById('modeSelection').classList.remove('hidden');
+            document.getElementById('gameArea').classList.add('hidden');
+            gameMode = null;
+            turnCount = 0;
+            updateBackgroundGradient();
+        }
+
+        function initGame() {
+            const macroBoard = document.getElementById('macroBoard');
+            macroBoard.innerHTML = '';
+
+            for (let i = 0; i < 9; i++) {
+                const microBoard = document.createElement('div');
+                microBoard.className = 'micro-board';
+                microBoard.id = `micro-${i}`;
+
+                for (let j = 0; j < 9; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.macroIndex = i;
+                    cell.dataset.microIndex = j;
+                    cell.onclick = () => handleCellClick(i, j);
+                    microBoard.appendChild(cell);
+                }
+
+                const overlay = document.createElement('div');
+                overlay.className = 'micro-board-overlay';
+                overlay.id = `overlay-${i}`;
+                microBoard.appendChild(overlay);
+
+                macroBoard.appendChild(microBoard);
+            }
+
+            updateBoardState();
+        }
+
+        function handleCellClick(macroIndex, microIndex) {
+            if (gameOver) return;
+            if (gameMode !== '2player' && currentPlayer === aiPlayer) return;
+
+            if (!makeMove(macroIndex, microIndex, false)) return;
+
+            if (gameMode !== '2player' && !gameOver && currentPlayer === aiPlayer) {
+                setTimeout(makeAIMove, 1500);
+            }
+        }
+
+        function makeMove(macroIndex, microIndex, isAI) {
+            if (macroState[macroIndex] !== null) return false;
+            if (microBoards[macroIndex][microIndex] !== null) return false;
+            if (activeBoard !== null && activeBoard !== macroIndex) return false;
+
+            microBoards[macroIndex][microIndex] = currentPlayer;
+            updateCell(macroIndex, microIndex, isAI);
+
+            // Play move sound
+            playSound(isAI ? 'aiMove' : 'playerMove');
+
+            turnCount++;
+            updateBackgroundGradient();
+
+            const winInfo = checkWinnerWithLine(microBoards[macroIndex]);
+            if (winInfo.winner) {
+                macroState[macroIndex] = winInfo.winner;
+                updateMicroBoardOverlay(macroIndex, winInfo.winner);
+                drawWinLine(macroIndex, winInfo.line, false);
+                playSound('microWin');
+            } else if (microBoards[macroIndex].every(cell => cell !== null)) {
+                macroState[macroIndex] = 'draw';
+                updateMicroBoardOverlay(macroIndex, 'draw');
+            }
+
+            const macroWinInfo = checkWinnerWithLine(macroState);
+            if (macroWinInfo.winner) {
+                gameOver = true;
+                const winnerName = (gameMode !== '2player' && macroWinInfo.winner === aiPlayer) ? 'AI' : `Player ${macroWinInfo.winner}`;
+                document.getElementById('gameInfo').textContent = `${winnerName} wins the game!`;
+                drawWinLine(-1, macroWinInfo.line, true);
+                playSound('macroWin');
+                updateBoardState();
+                return true;
+            }
+
+            if (macroState.every(state => state !== null)) {
+                gameOver = true;
+                document.getElementById('gameInfo').textContent = `Game is a draw!`;
+                updateBoardState();
+                return true;
+            }
+
+            if (macroState[microIndex] === null) {
+                activeBoard = microIndex;
+            } else {
+                activeBoard = null;
+            }
+
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            updateBoardState();
+            return true;
+        }
+
+        function makeAIMove() {
+            const macroBoard = document.getElementById('macroBoard');
+            macroBoard.classList.add('disabled');
+
+            let move;
+            if (gameMode === 'ai-easy') {
+                move = getRandomMove();
+            } else if (gameMode === 'ai-hard') {
+                move = getSmartMove();
+            } else {
+                move = getExtremeMove();
+            }
+
+            if (move) {
+                makeMove(move.macroIndex, move.microIndex, true);
+            }
+
+            macroBoard.classList.remove('disabled');
+        }
+
+        function getRandomMove() {
+            const validMoves = getValidMoves();
+            if (validMoves.length === 0) return null;
+            return validMoves[Math.floor(Math.random() * validMoves.length)];
+        }
+
+        function getValidMoves() {
+            const moves = [];
+            const boards = activeBoard !== null ? [activeBoard] : [0, 1, 2, 3, 4, 5, 6, 7, 8];
+
+            for (const macroIndex of boards) {
+                if (macroState[macroIndex] !== null) continue;
+
+                for (let microIndex = 0; microIndex < 9; microIndex++) {
+                    if (microBoards[macroIndex][microIndex] === null) {
+                        moves.push({ macroIndex, microIndex });
+                    }
+                }
+            }
+
+            return moves;
+        }
+
+        function getSmartMove() {
+            const validMoves = getValidMoves();
+            if (validMoves.length === 0) return null;
+
+            for (const move of validMoves) {
+                if (canWinMicroBoard(move.macroIndex, move.microIndex, aiPlayer)) {
+                    return move;
+                }
+            }
+
+            for (const move of validMoves) {
+                if (canWinMicroBoard(move.macroIndex, move.microIndex, getOpponent(aiPlayer))) {
+                    return move;
+                }
+            }
+
+            for (const move of validMoves) {
+                if (wouldWinMacroGame(move)) {
+                    return move;
+                }
+            }
+
+            for (const move of validMoves) {
+                if (wouldBlockMacroWin(move)) {
+                    return move;
+                }
+            }
+
+            const centerMoves = validMoves.filter(m => m.microIndex === 4);
+            if (centerMoves.length > 0) {
+                return centerMoves[Math.floor(Math.random() * centerMoves.length)];
+            }
+
+            const cornerMoves = validMoves.filter(m => [0, 2, 6, 8].includes(m.microIndex));
+            if (cornerMoves.length > 0) {
+                return cornerMoves[Math.floor(Math.random() * cornerMoves.length)];
+            }
+
+            return validMoves[Math.floor(Math.random() * validMoves.length)];
+        }
+
+        function getExtremeMove() {
+            const validMoves = getValidMoves();
+            if (validMoves.length === 0) return null;
+
+            // EXTREME: Use deep lookahead minimax
+            let bestMove = null;
+            let bestScore = -Infinity;
+
+            for (const move of validMoves) {
+                // Simulate making this move
+                const savedMicroBoards = microBoards.map(board => [...board]);
+                const savedMacroState = [...macroState];
+                const savedActiveBoard = activeBoard;
+                const savedPlayer = currentPlayer;
+
+                // Make the move
+                microBoards[move.macroIndex][move.microIndex] = aiPlayer;
+
+                // Check if micro board is won
+                const winInfo = checkWinnerWithLine(microBoards[move.macroIndex]);
+                if (winInfo.winner) {
+                    macroState[move.macroIndex] = winInfo.winner;
+                } else if (microBoards[move.macroIndex].every(cell => cell !== null)) {
+                    macroState[move.macroIndex] = 'draw';
+                }
+
+                // Update active board
+                if (macroState[move.microIndex] === null) {
+                    activeBoard = move.microIndex;
+                } else {
+                    activeBoard = null;
+                }
+
+                // Evaluate this position with deeper lookahead
+                let score = evaluateMoveWithLookahead(move, 3); // 3 moves deep for EXTREME difficulty
+
+                // Restore state
+                microBoards = savedMicroBoards;
+                macroState = savedMacroState;
+                activeBoard = savedActiveBoard;
+                currentPlayer = savedPlayer;
+
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMove = move;
+                }
+            }
+
+            return bestMove || validMoves[0];
+        }
+
+        function evaluateMoveWithLookahead(move, depth) {
+            // Check for immediate macro win
+            if (checkWinner(macroState) === aiPlayer) return 100000;
+            if (checkWinner(macroState) === getOpponent(aiPlayer)) return -100000;
+
+            // Base score from static evaluation
+            let score = evaluateMove(move);
+
+            // Add lookahead if depth > 0
+            if (depth > 0) {
+                const opponent = getOpponent(aiPlayer);
+                const opponentMoves = getValidMovesForLookahead();
+
+                if (opponentMoves.length === 0) return score;
+
+                // Find opponent's best response
+                let worstOutcome = Infinity;
+
+                // Consider more opponent moves for deeper analysis
+                const movesToConsider = Math.min(12, opponentMoves.length);
+
+                for (const oppMove of opponentMoves.slice(0, movesToConsider)) {
+                    // Simulate opponent move
+                    const savedMicroBoards = microBoards.map(board => [...board]);
+                    const savedMacroState = [...macroState];
+                    const savedActiveBoard = activeBoard;
+
+                    microBoards[oppMove.macroIndex][oppMove.microIndex] = opponent;
+
+                    const oppWinInfo = checkWinnerWithLine(microBoards[oppMove.macroIndex]);
+                    if (oppWinInfo.winner) {
+                        macroState[oppMove.macroIndex] = oppWinInfo.winner;
+                    } else if (microBoards[oppMove.macroIndex].every(cell => cell !== null)) {
+                        macroState[oppMove.macroIndex] = 'draw';
+                    }
+
+                    // Check if opponent won the macro game
+                    if (checkWinner(macroState) === opponent) {
+                        worstOutcome = -100000;
+                        microBoards = savedMicroBoards;
+                        macroState = savedMacroState;
+                        activeBoard = savedActiveBoard;
+                        break;
+                    }
+
+                    if (macroState[oppMove.microIndex] === null) {
+                        activeBoard = oppMove.microIndex;
+                    } else {
+                        activeBoard = null;
+                    }
+
+                    // Evaluate AI's best response to this
+                    const aiResponses = getValidMovesForLookahead();
+                    let bestResponse = -Infinity;
+
+                    const responsesToConsider = Math.min(10, aiResponses.length);
+                    for (const aiResp of aiResponses.slice(0, responsesToConsider)) {
+                        let respScore = evaluateMove(aiResp);
+
+                        // Add one more level of lookahead if depth > 1
+                        if (depth > 1) {
+                            respScore += evaluatePositionShallow() * 0.3;
+                        }
+
+                        bestResponse = Math.max(bestResponse, respScore);
+                    }
+
+                    worstOutcome = Math.min(worstOutcome, bestResponse);
+
+                    // Restore state
+                    microBoards = savedMicroBoards;
+                    macroState = savedMacroState;
+                    activeBoard = savedActiveBoard;
+                }
+
+                // Adjust score based on lookahead with higher weight
+                score += worstOutcome * 0.8;
+            }
+
+            return score;
+        }
+
+        function getValidMovesForLookahead() {
+            const moves = [];
+            const boards = activeBoard !== null ? [activeBoard] : [0, 1, 2, 3, 4, 5, 6, 7, 8];
+
+            for (const macroIndex of boards) {
+                if (macroState[macroIndex] !== null) continue;
+
+                for (let microIndex = 0; microIndex < 9; microIndex++) {
+                    if (microBoards[macroIndex][microIndex] === null) {
+                        moves.push({ macroIndex, microIndex });
+                    }
+                }
+            }
+
+            return moves;
+        }
+
+        function evaluatePositionShallow() {
+            let score = 0;
+
+            // Quick position evaluation
+            const aiMacroThreats = countThreats(macroState, aiPlayer);
+            const oppMacroThreats = countThreats(macroState, getOpponent(aiPlayer));
+
+            score += aiMacroThreats * 500;
+            score -= oppMacroThreats * 600;
+
+            // Count controlled boards
+            const aiBoards = macroState.filter(s => s === aiPlayer).length;
+            const oppBoards = macroState.filter(s => s === getOpponent(aiPlayer)).length;
+
+            score += aiBoards * 100;
+            score -= oppBoards * 120;
+
+            // Check macro pattern strength
+            score += getMacroPatternStrength(aiPlayer) * 50;
+            score -= getMacroPatternStrength(getOpponent(aiPlayer)) * 60;
+
+            return score;
+        }
+
+        function evaluateMove(move) {
+            let score = 0;
+
+            // CRITICAL: Immediate macro win
+            if (wouldWinMacroGame(move)) return 100000;
+
+            // CRITICAL: Block opponent macro win
+            if (wouldBlockMacroWin(move)) score += 50000;
+
+            // Evaluate macro board control and strategy
+            const macroEval = evaluateMacroStrategy(move);
+            score += macroEval;
+
+            // Win micro board
+            if (canWinMicroBoard(move.macroIndex, move.microIndex, aiPlayer)) {
+                score += 2000;
+
+                // HUGE bonus if this win creates multiple macro threats
+                const tempMacroState = [...macroState];
+                tempMacroState[move.macroIndex] = aiPlayer;
+                const macroThreatsAfter = countThreats(tempMacroState, aiPlayer);
+                score += macroThreatsAfter * 1500;
+
+                // Extra bonus if winning a key macro position (center or corner)
+                if (move.macroIndex === 4) score += 1000;
+                if ([0, 2, 6, 8].includes(move.macroIndex)) score += 600;
+            }
+
+            // Block opponent micro board win
+            if (canWinMicroBoard(move.macroIndex, move.microIndex, getOpponent(aiPlayer))) {
+                score += 1800;
+
+                // HUGE penalty if letting them win creates macro threats
+                const tempMacroState = [...macroState];
+                tempMacroState[move.macroIndex] = getOpponent(aiPlayer);
+                const opponentMacroThreats = countThreats(tempMacroState, getOpponent(aiPlayer));
+                score += opponentMacroThreats * 2000;
+
+                // Critical to block key macro positions
+                if (move.macroIndex === 4) score += 1200;
+                if ([0, 2, 6, 8].includes(move.macroIndex)) score += 700;
+            }
+
+            // CRITICAL: Evaluate where we're sending the opponent
+            if (macroState[move.microIndex] !== null) {
+                // MAJOR PENALTY: Giving opponent free choice is BAD!
+                score -= 1500;
+
+                // Even worse if opponent has macro threats
+                const opponentMacroThreats = countThreats(macroState, getOpponent(aiPlayer));
+                if (opponentMacroThreats > 0) {
+                    score -= 2000; // They can exploit their freedom
+                }
+            } else {
+                // Evaluate the board we're sending them to
+                const targetBoard = microBoards[move.microIndex];
+                const opponent = getOpponent(aiPlayer);
+
+                // CRITICAL: Very bad if we send them to a board where they can win
+                if (canOpponentWinBoard(move.microIndex)) {
+                    score -= 3000;
+                }
+
+                // Check if sending them here helps their macro strategy
+                const opponentThreats = countThreats(targetBoard, opponent);
+                const aiThreatsInTarget = countThreats(targetBoard, aiPlayer);
+
+                // Bad if they have threats in target board
+                score -= opponentThreats * 400;
+
+                // Good if we have threats in target board (they must defend)
+                score += aiThreatsInTarget * 300;
+
+                // Strategic board control: avoid sending to key macro positions
+                if (move.microIndex === 4 && macroState[4] === null) {
+                    score -= 800; // Don't give them center!
+                }
+
+                if ([0, 2, 6, 8].includes(move.microIndex) && macroState[move.microIndex] === null) {
+                    score -= 400; // Avoid giving corners
+                }
+
+                // Good if we send them to a board we already control
+                if (macroState[move.microIndex] === aiPlayer) {
+                    score += 500; // Already won, send them there
+                }
+
+                // Prefer sending to edge positions (less strategic value)
+                if ([1, 3, 5, 7].includes(move.microIndex)) {
+                    score += 200;
+                }
+            }
+
+            // Strategic positioning - PRIORITIZE center and corners
+            if (move.macroIndex === 4 && macroState[4] === null) {
+                score += 500; // Center is crucial
+            } else if ([0, 2, 6, 8].includes(move.macroIndex) && macroState[move.macroIndex] === null) {
+                score += 300; // Corners are important
+            }
+
+            // Prefer center and corner cells in micro boards
+            if (move.microIndex === 4) score += 80;
+            if ([0, 2, 6, 8].includes(move.microIndex)) score += 50;
+
+            // Look for fork opportunities (creating two threats at once)
+            if (createsFork(move)) {
+                score += 800;
+            }
+
+            // Check for macro-level forks
+            if (createsMacroFork(move)) {
+                score += 2500;
+            }
+
+            return score;
+        }
+
+        function evaluateMacroStrategy(move) {
+            let score = 0;
+            const opponent = getOpponent(aiPlayer);
+
+            // Count current macro threats
+            const currentMacroThreats = countThreats(macroState, aiPlayer);
+            const currentOppMacroThreats = countThreats(macroState, opponent);
+
+            score += currentMacroThreats * 600;
+
+            // Penalize if opponent has multiple macro threats
+            if (currentOppMacroThreats >= 2) {
+                score -= 1500; // Very dangerous position
+            }
+
+            // Evaluate macro board pattern strength
+            const macroPattern = getMacroPatternStrength(aiPlayer);
+            const oppMacroPattern = getMacroPatternStrength(opponent);
+
+            score += macroPattern * 200;
+            score -= oppMacroPattern * 250;
+
+            return score;
+        }
+
+        function getMacroPatternStrength(player) {
+            let strength = 0;
+
+            // Check for strong patterns
+            const center = macroState[4] === player ? 1 : 0;
+            const corners = [0, 2, 6, 8].filter(i => macroState[i] === player).length;
+            const edges = [1, 3, 5, 7].filter(i => macroState[i] === player).length;
+
+            strength += center * 3; // Center is very valuable
+            strength += corners * 2; // Corners are valuable
+            strength += edges; // Edges are okay
+
+            // Bonus for opposite corners (fork potential)
+            if (macroState[0] === player && macroState[8] === player) strength += 3;
+            if (macroState[2] === player && macroState[6] === player) strength += 3;
+
+            return strength;
+        }
+
+        function createsMacroFork(move) {
+            // Check if winning this micro board creates a macro fork
+            if (!canWinMicroBoard(move.macroIndex, move.microIndex, aiPlayer)) {
+                return false;
+            }
+
+            const tempMacroState = [...macroState];
+            tempMacroState[move.macroIndex] = aiPlayer;
+
+            const threats = countThreats(tempMacroState, aiPlayer);
+            return threats >= 2;
+        }
+
+        function canOpponentWinBoard(macroIndex) {
+            const opponent = getOpponent(aiPlayer);
+            const board = microBoards[macroIndex];
+
+            for (let i = 0; i < 9; i++) {
+                if (board[i] === null) {
+                    const tempBoard = [...board];
+                    tempBoard[i] = opponent;
+                    if (checkWinner(tempBoard) === opponent) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function createsFork(move) {
+            // Check if this move creates multiple threats in the micro board
+            const tempBoard = [...microBoards[move.macroIndex]];
+            tempBoard[move.microIndex] = aiPlayer;
+
+            const threats = countThreats(tempBoard, aiPlayer);
+            return threats >= 2;
+        }
+
+        function countThreats(board, player) {
+            const lines = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+
+            let threats = 0;
+            for (const [a, b, c] of lines) {
+                const cells = [board[a], board[b], board[c]];
+                const playerCount = cells.filter(cell => cell === player).length;
+                const emptyCount = cells.filter(cell => cell === null).length;
+
+                if (playerCount === 2 && emptyCount === 1) threats++;
+            }
+
+            return threats;
+        }
+
+        function countMacroThreats() {
+            return countThreats(macroState, aiPlayer);
+        }
+
+        function canWinMicroBoard(macroIndex, microIndex, player) {
+            const tempBoard = [...microBoards[macroIndex]];
+            tempBoard[microIndex] = player;
+            return checkWinner(tempBoard) === player;
+        }
+
+        function wouldWinMacroGame(move) {
+            const tempMicroBoard = [...microBoards[move.macroIndex]];
+            tempMicroBoard[move.microIndex] = aiPlayer;
+
+            if (checkWinner(tempMicroBoard) === aiPlayer) {
+                const tempMacroState = [...macroState];
+                tempMacroState[move.macroIndex] = aiPlayer;
+                return checkWinner(tempMacroState) === aiPlayer;
+            }
+            return false;
+        }
+
+        function wouldBlockMacroWin(move) {
+            const opponent = getOpponent(aiPlayer);
+            const tempMicroBoard = [...microBoards[move.macroIndex]];
+            tempMicroBoard[move.microIndex] = opponent;
+
+            if (checkWinner(tempMicroBoard) === opponent) {
+                const tempMacroState = [...macroState];
+                tempMacroState[move.macroIndex] = opponent;
+                return checkWinner(tempMacroState) === opponent;
+            }
+            return false;
+        }
+
+        function getOpponent(player) {
+            return player === 'X' ? 'O' : 'X';
+        }
+
+        function updateCell(macroIndex, microIndex, isAI) {
+            const microBoard = document.getElementById(`micro-${macroIndex}`);
+            const cell = microBoard.children[microIndex];
+            cell.textContent = microBoards[macroIndex][microIndex];
+            cell.classList.add('filled', microBoards[macroIndex][microIndex].toLowerCase());
+
+            if (isAI) {
+                cell.classList.add('ai-move');
+                setTimeout(() => cell.classList.remove('ai-move'), 1000);
+            }
+        }
+
+        function updateMicroBoardOverlay(macroIndex, state) {
+            const overlay = document.getElementById(`overlay-${macroIndex}`);
+            const microBoard = document.getElementById(`micro-${macroIndex}`);
+
+            if (state === 'draw') {
+                microBoard.classList.add('draw');
+            } else {
+                overlay.textContent = state;
+                overlay.classList.add(state.toLowerCase());
+                microBoard.classList.add('won');
+            }
+        }
+
+        function drawWinLine(macroIndex, lineIndices, isMacro) {
+            const [a, b, c] = lineIndices;
+            const boardElement = macroIndex === -1
+                ? document.getElementById('macroBoard')
+                : document.getElementById(`micro-${macroIndex}`);
+
+            const line = document.createElement('div');
+            line.className = 'win-line';
+
+            // Determine line type and position
+            const isRow = Math.floor(a / 3) === Math.floor(b / 3);
+            const isCol = a % 3 === b % 3;
+            const isDiag = (a === 0 && c === 8) || (a === 2 && c === 6);
+
+            if (isRow) {
+                const row = Math.floor(a / 3);
+                if (isMacro) {
+                    line.style.width = '95%';
+                    line.style.height = '6px';
+                    line.style.left = '2.5%';
+                    line.style.top = `${16.67 + row * 33.33}%`;
+                } else {
+                    line.style.width = '90%';
+                    line.style.height = '4px';
+                    line.style.left = '5%';
+                    line.style.top = `${16.67 + row * 33.33}%`;
+                }
+            } else if (isCol) {
+                const col = a % 3;
+                if (isMacro) {
+                    line.style.height = '95%';
+                    line.style.width = '6px';
+                    line.style.top = '2.5%';
+                    line.style.left = `${16.67 + col * 33.33}%`;
+                } else {
+                    line.style.height = '90%';
+                    line.style.width = '4px';
+                    line.style.top = '5%';
+                    line.style.left = `${16.67 + col * 33.33}%`;
+                }
+            } else if (isDiag) {
+                if (isMacro) {
+                    line.style.width = '135%';
+                    line.style.height = '6px';
+                } else {
+                    line.style.width = '130%';
+                    line.style.height = '4px';
+                }
+                line.style.left = '50%';
+                line.style.top = '50%';
+                line.style.transformOrigin = 'center';
+                const angle = a === 0 ? 45 : -45;
+                line.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+            }
+
+            boardElement.appendChild(line);
+        }
+
+        function updateBoardState() {
+            for (let i = 0; i < 9; i++) {
+                const microBoard = document.getElementById(`micro-${i}`);
+                microBoard.classList.remove('active', 'inactive');
+
+                if (gameOver) {
+                    if (macroState[i] === null) {
+                        microBoard.classList.add('inactive');
+                    }
+                } else if (macroState[i] !== null) {
+                    continue;
+                } else if (activeBoard === null || activeBoard === i) {
+                    microBoard.classList.add('active');
+                } else {
+                    microBoard.classList.add('inactive');
+                }
+            }
+
+            if (!gameOver) {
+                let playerName = currentPlayer;
+                if (gameMode !== '2player' && currentPlayer === aiPlayer) {
+                    playerName = 'AI';
+                } else if (gameMode !== '2player') {
+                    playerName = 'You';
+                } else {
+                    playerName = `Player ${currentPlayer}`;
+                }
+
+                const message = activeBoard === null
+                    ? `${playerName}'s turn - Play anywhere`
+                    : `${playerName}'s turn - Play in highlighted board`;
+                document.getElementById('gameInfo').textContent = message;
+            }
+        }
+
+        function checkWinner(board) {
+            const result = checkWinnerWithLine(board);
+            return result.winner;
+        }
+
+        function checkWinnerWithLine(board) {
+            const lines = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+
+            for (const line of lines) {
+                const [a, b, c] = line;
+                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                    return { winner: board[a], line: line };
+                }
+            }
+
+            return { winner: null, line: null };
+        }
+
+        function resetGame() {
+            currentPlayer = 'X';
+            activeBoard = null;
+            macroState = Array(9).fill(null);
+            microBoards = Array(9).fill(null).map(() => Array(9).fill(null));
+            gameOver = false;
+            turnCount = 0;
+            updateBackgroundGradient();
+            initGame();
+        }
+    </script>
+</body>
+</html>
