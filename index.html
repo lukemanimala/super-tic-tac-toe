@@ -271,6 +271,176 @@
         .hidden {
             display: none;
         }
+
+        /* Mobile Responsive Styles */
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+                margin-bottom: 15px;
+            }
+
+            .mode-selection {
+                padding: 20px 15px;
+            }
+
+            .mode-selection h2 {
+                font-size: 1.2em;
+            }
+
+            .mode-buttons {
+                gap: 10px;
+            }
+
+            .mode-button {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+
+            .game-info {
+                font-size: 1em;
+                margin-bottom: 10px;
+            }
+
+            .macro-board {
+                gap: 8px;
+                padding: 8px;
+                max-width: 100%;
+            }
+
+            .micro-board {
+                width: min(30vw, 110px);
+                height: min(30vw, 110px);
+                padding: 5px;
+                gap: 3px;
+            }
+
+            .micro-board.active {
+                transform: scale(1.02);
+            }
+
+            .cell {
+                font-size: 18px;
+                border-width: 1px;
+            }
+
+            .micro-board-overlay {
+                font-size: 50px;
+            }
+
+            button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+
+            .rules {
+                padding: 15px;
+                margin-top: 15px;
+                font-size: 14px;
+            }
+
+            .rules h2 {
+                font-size: 1.1em;
+            }
+
+            .rules li {
+                margin: 6px 0;
+                font-size: 13px;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+                margin-bottom: 10px;
+            }
+
+            .mode-selection {
+                padding: 15px 10px;
+            }
+
+            .mode-buttons {
+                gap: 8px;
+            }
+
+            .mode-button {
+                padding: 10px 15px;
+                font-size: 13px;
+            }
+
+            .game-info {
+                font-size: 0.9em;
+            }
+
+            .macro-board {
+                gap: 6px;
+                padding: 6px;
+            }
+
+            .micro-board {
+                width: min(29vw, 95px);
+                height: min(29vw, 95px);
+                padding: 4px;
+                gap: 2px;
+                border-radius: 6px;
+            }
+
+            .cell {
+                font-size: 16px;
+                border-radius: 3px;
+            }
+
+            .micro-board-overlay {
+                font-size: 40px;
+            }
+
+            .win-line {
+                height: 4px !important;
+                width: 4px !important;
+            }
+
+            button {
+                padding: 8px 16px;
+                font-size: 13px;
+            }
+
+            .rules {
+                display: none;
+            }
+        }
+
+        @media screen and (max-width: 360px) {
+            h1 {
+                font-size: 1.3em;
+            }
+
+            .macro-board {
+                gap: 4px;
+                padding: 4px;
+            }
+
+            .micro-board {
+                width: min(28vw, 85px);
+                height: min(28vw, 85px);
+                padding: 3px;
+                gap: 2px;
+            }
+
+            .cell {
+                font-size: 14px;
+            }
+
+            .micro-board-overlay {
+                font-size: 35px;
+            }
+        }
     </style>
 </head>
 <body>
