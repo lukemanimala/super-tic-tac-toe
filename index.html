@@ -105,6 +105,7 @@
         .micro-board {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
             gap: 4px;
             background: white;
             padding: 8px;
@@ -144,9 +145,8 @@
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s ease;
-            min-width: 0;
+            aspect-ratio: 1 / 1;
             min-height: 0;
-            aspect-ratio: 1;
         }
 
         .cell:hover:not(.filled) {
