@@ -1806,8 +1806,8 @@
             const input = document.getElementById(`nameChar${index + 1}`);
             const value = input.value;
 
-            // Only allow letters
-            if (value && !/^[a-zA-Z]$/.test(value)) {
+            // Allow letters and numbers
+            if (value && !/^[a-zA-Z0-9]$/.test(value)) {
                 input.value = '';
                 return;
             }
@@ -1856,8 +1856,21 @@
         }
 
         function showNameEntryModal(score) {
-            // Defensive check: don't show if score is invalid or no game mode
-            if (!score || score <= 0 || !gameMode || gameMode === '2player') {
+            // CRITICAL: Multiple defensive checks to prevent accidental modal showing
+            if (!score || score <= 0) {
+                console.log('showNameEntryModal blocked: invalid score', score);
+                return;
+            }
+            if (!gameMode || gameMode === '2player') {
+                console.log('showNameEntryModal blocked: invalid game mode', gameMode);
+                return;
+            }
+            if (!gameStartTime) {
+                console.log('showNameEntryModal blocked: no game start time');
+                return;
+            }
+            if (!gameOver) {
+                console.log('showNameEntryModal blocked: game not over');
                 return;
             }
 
@@ -1883,12 +1896,31 @@
 
         // Initialize home leaderboard on page load
         window.addEventListener('DOMContentLoaded', () => {
-            // Ensure all modals are hidden on page load
-            document.getElementById('nameEntryModal').classList.add('hidden');
-            document.getElementById('leaderboardModal').classList.add('hidden');
+            // CRITICAL: Force hide all modals on page load
+            const nameModal = document.getElementById('nameEntryModal');
+            const leaderboardModal = document.getElementById('leaderboardModal');
+
+            if (nameModal) {
+                nameModal.classList.add('hidden');
+                nameModal.style.display = 'none'; // Force hide with inline style too
+            }
+            if (leaderboardModal) {
+                leaderboardModal.classList.add('hidden');
+            }
+
+            // Reset all game state variables
+            gameMode = null;
+            gameStartTime = null;
+            gameOver = false;
+            currentScore = 0;
 
             // Display home leaderboard
             displayHomeLeaderboard();
+
+            // After a brief delay, remove inline style to allow CSS to work
+            setTimeout(() => {
+                if (nameModal) nameModal.style.display = '';
+            }, 100);
         });
     </script>
 </body>
