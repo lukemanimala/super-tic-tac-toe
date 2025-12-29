@@ -204,20 +204,65 @@
 
         .win-line {
             position: absolute;
-            background: rgba(255, 215, 0, 0.8);
+            background: rgba(255, 215, 0, 0.9);
             pointer-events: none;
             z-index: 10;
-            animation: winLineGrow 0.6s ease-out;
+            animation: winLineGrow 0.6s ease-out forwards;
+            will-change: opacity;
+            -webkit-animation: winLineGrow 0.6s ease-out forwards;
+        }
+
+        .win-line.macro-win {
+            background: rgba(76, 175, 80, 0.9);
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.6);
+        }
+
+        .win-line.diagonal-line {
+            animation: winLineDiagonalGrow 0.6s ease-out forwards;
+            -webkit-animation: winLineDiagonalGrow 0.6s ease-out forwards;
         }
 
         @keyframes winLineGrow {
             from {
-                transform: scale(0);
                 opacity: 0;
+                transform: scaleX(0);
             }
             to {
-                transform: scale(1);
                 opacity: 1;
+                transform: scaleX(1);
+            }
+        }
+
+        @-webkit-keyframes winLineGrow {
+            from {
+                opacity: 0;
+                -webkit-transform: scaleX(0);
+            }
+            to {
+                opacity: 1;
+                -webkit-transform: scaleX(1);
+            }
+        }
+
+        @keyframes winLineDiagonalGrow {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) rotate(var(--rotation-angle)) scaleX(0);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) rotate(var(--rotation-angle)) scaleX(1);
+            }
+        }
+
+        @-webkit-keyframes winLineDiagonalGrow {
+            from {
+                opacity: 0;
+                -webkit-transform: translate(-50%, -50%) rotate(var(--rotation-angle)) scaleX(0);
+            }
+            to {
+                opacity: 1;
+                -webkit-transform: translate(-50%, -50%) rotate(var(--rotation-angle)) scaleX(1);
             }
         }
 
@@ -402,8 +447,13 @@
             }
 
             .win-line {
-                height: 4px !important;
-                width: 4px !important;
+                min-height: 3px !important;
+                min-width: 3px !important;
+            }
+
+            .win-line.macro-win {
+                min-height: 5px !important;
+                min-width: 5px !important;
             }
 
             button {
@@ -1246,7 +1296,7 @@
                 : document.getElementById(`micro-${macroIndex}`);
 
             const line = document.createElement('div');
-            line.className = 'win-line';
+            line.className = isMacro ? 'win-line macro-win' : 'win-line';
 
             // Determine line type and position
             const isRow = Math.floor(a / 3) === Math.floor(b / 3);
@@ -1289,9 +1339,10 @@
                 }
                 line.style.left = '50%';
                 line.style.top = '50%';
-                line.style.transformOrigin = 'center';
                 const angle = a === 0 ? 45 : -45;
-                line.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+                line.style.transformOrigin = 'center center';
+                line.style.setProperty('--rotation-angle', `${angle}deg`);
+                line.classList.add('diagonal-line');
             }
 
             boardElement.appendChild(line);
