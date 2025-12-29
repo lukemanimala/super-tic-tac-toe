@@ -273,6 +273,180 @@
             display: none;
         }
 
+        /* Leaderboard Styles */
+        .leaderboard-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .leaderboard-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .leaderboard-content h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .leaderboard-table th {
+            background: #667eea;
+            color: white;
+            padding: 10px;
+            text-align: left;
+        }
+
+        .leaderboard-table td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .leaderboard-table tr:hover {
+            background: #f5f5f5;
+        }
+
+        .rank-medal {
+            font-size: 1.2em;
+            margin-right: 5px;
+        }
+
+        .difficulty-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .difficulty-easy {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .difficulty-hard {
+            background: #FF9800;
+            color: white;
+        }
+
+        .difficulty-extreme {
+            background: #F44336;
+            color: white;
+        }
+
+        /* Name Entry Styles */
+        .name-entry-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+            padding: 20px;
+        }
+
+        .name-entry-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .name-entry-content h2 {
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .score-display {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .name-input-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .name-input {
+            width: 60px;
+            height: 80px;
+            font-size: 2.5em;
+            text-align: center;
+            text-transform: uppercase;
+            border: 3px solid white;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #667eea;
+            font-weight: bold;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .name-input:focus {
+            outline: none;
+            background: white;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        .error-message {
+            color: #ffcccc;
+            margin-top: 10px;
+            min-height: 20px;
+        }
+
+        .submit-score-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .submit-score-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .submit-score-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         /* Mobile Responsive Styles */
         @media screen and (max-width: 768px) {
             body {
@@ -468,9 +642,15 @@
                 <button class="mode-button" onclick="startGame('ai-easy')">vs AI (Easy)</button>
                 <button class="mode-button" onclick="startGame('ai-hard')">vs AI (Hard)</button>
                 <button class="mode-button" onclick="startGame('ai-extreme')">vs AI (EXTREME)</button>
+                <button class="mode-button" onclick="showLeaderboard()">🏆 Leaderboard</button>
             </div>
 
-            <div class="rules">
+            <div id="homeLeaderboard" class="rules">
+                <h2>🏆 Top Scores</h2>
+                <div id="homeLeaderboardContent"></div>
+            </div>
+
+            <div class="rules" style="border-top: none; padding-top: 10px;">
                 <h2>How to Play</h2>
                 <ul>
                     <li>Each cell contains a mini Tic Tac Toe board</li>
@@ -491,6 +671,31 @@
                 <button onclick="resetToMenu()">Back to Menu</button>
             </div>
         </div>
+
+        <!-- Name Entry Modal -->
+        <div id="nameEntryModal" class="name-entry-modal hidden">
+            <div class="name-entry-content">
+                <h2>🎉 YOU WIN! 🎉</h2>
+                <div class="score-display" id="finalScore">0</div>
+                <p style="margin-bottom: 20px;">Enter your name:</p>
+                <div class="name-input-container">
+                    <input type="text" maxlength="1" class="name-input" id="nameChar1" oninput="handleNameInput(0)">
+                    <input type="text" maxlength="1" class="name-input" id="nameChar2" oninput="handleNameInput(1)">
+                    <input type="text" maxlength="1" class="name-input" id="nameChar3" oninput="handleNameInput(2)">
+                </div>
+                <div class="error-message" id="nameError"></div>
+                <button class="submit-score-btn" onclick="submitScore()">Submit Score</button>
+            </div>
+        </div>
+
+        <!-- Leaderboard Modal -->
+        <div id="leaderboardModal" class="leaderboard-modal hidden">
+            <div class="leaderboard-content">
+                <h2>🏆 Leaderboard</h2>
+                <div id="leaderboardTable"></div>
+                <button onclick="closeLeaderboard()" style="width: 100%;">Close</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -503,6 +708,10 @@
         let gameMode = null;
         let aiPlayer = 'O';
         let turnCount = 0;
+
+        // Leaderboard state
+        let gameStartTime = null;
+        let currentScore = 0;
 
         // Rainbow gradients for background
         const rainbowGradients = [
@@ -675,6 +884,17 @@
                 drawWinLine(-1, macroWinInfo.line, true);
                 playSound('macroWin');
                 updateBoardState();
+
+                // Show leaderboard entry for player wins against AI
+                if (gameMode !== '2player' && gameMode !== null && macroWinInfo.winner !== aiPlayer) {
+                    const gameEndTime = Date.now();
+                    const timeInSeconds = (gameEndTime - gameStartTime) / 1000;
+                    const score = calculateScore(gameMode, timeInSeconds);
+                    setTimeout(() => {
+                        showNameEntryModal(score);
+                    }, 1500); // Wait for celebration
+                }
+
                 return true;
             }
 
@@ -1363,9 +1583,224 @@
             microBoards = Array(9).fill(null).map(() => Array(9).fill(null));
             gameOver = false;
             turnCount = 0;
+            gameStartTime = Date.now(); // Start timer
             updateBackgroundGradient();
             initGame();
         }
+
+        // ===== LEADERBOARD FUNCTIONS =====
+
+        // Bad words filter (3-letter combinations)
+        const badWords = ['ass', 'fuk', 'fuc', 'wtf', 'dmn', 'sht', 'cok', 'dik', 'fag', 'cnt'];
+
+        function containsBadWord(name) {
+            const lowerName = name.toLowerCase();
+            return badWords.some(word => lowerName.includes(word));
+        }
+
+        function calculateScore(difficulty, timeInSeconds) {
+            // Base points by difficulty
+            const basePoints = {
+                'ai-easy': 100,
+                'ai-hard': 250,
+                'ai-extreme': 500
+            };
+
+            // Time multiplier (faster = better)
+            // Perfect score at 30 seconds, decreases linearly to 50% at 180 seconds
+            const timeMultiplier = Math.max(0.5, 2 - (timeInSeconds / 120));
+
+            return Math.floor(basePoints[difficulty] * timeMultiplier);
+        }
+
+        function getLeaderboard() {
+            const data = localStorage.getItem('superTTTLeaderboard');
+            return data ? JSON.parse(data) : [];
+        }
+
+        function saveToLeaderboard(name, score, difficulty) {
+            const leaderboard = getLeaderboard();
+
+            leaderboard.push({
+                name: name.toUpperCase(),
+                score: score,
+                difficulty: difficulty,
+                timestamp: Date.now()
+            });
+
+            // Sort by score (highest first), then by timestamp (earliest first)
+            leaderboard.sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return a.timestamp - b.timestamp;
+            });
+
+            // Keep only top 100 scores
+            const topScores = leaderboard.slice(0, 100);
+            localStorage.setItem('superTTTLeaderboard', JSON.stringify(topScores));
+
+            return topScores;
+        }
+
+        function getDifficultyDisplayName(difficulty) {
+            const names = {
+                'ai-easy': 'Easy',
+                'ai-hard': 'Hard',
+                'ai-extreme': 'EXTREME'
+            };
+            return names[difficulty] || difficulty;
+        }
+
+        function getDifficultyClass(difficulty) {
+            const classes = {
+                'ai-easy': 'difficulty-easy',
+                'ai-hard': 'difficulty-hard',
+                'ai-extreme': 'difficulty-extreme'
+            };
+            return classes[difficulty] || '';
+        }
+
+        function displayHomeLeaderboard() {
+            const leaderboard = getLeaderboard();
+            const container = document.getElementById('homeLeaderboardContent');
+
+            if (leaderboard.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No scores yet. Be the first!</p>';
+                return;
+            }
+
+            // Show top 5 scores
+            const top5 = leaderboard.slice(0, 5);
+            let html = '<table class="leaderboard-table"><thead><tr><th>Rank</th><th>Name</th><th>Score</th><th>Difficulty</th></tr></thead><tbody>';
+
+            top5.forEach((entry, index) => {
+                const medals = ['🥇', '🥈', '🥉'];
+                const medal = index < 3 ? `<span class="rank-medal">${medals[index]}</span>` : '';
+                const rank = medal || `${index + 1}.`;
+
+                html += `
+                    <tr>
+                        <td>${rank}</td>
+                        <td><strong>${entry.name}</strong></td>
+                        <td>${entry.score}</td>
+                        <td><span class="difficulty-badge ${getDifficultyClass(entry.difficulty)}">${getDifficultyDisplayName(entry.difficulty)}</span></td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function showLeaderboard() {
+            const leaderboard = getLeaderboard();
+            const modal = document.getElementById('leaderboardModal');
+            const container = document.getElementById('leaderboardTable');
+
+            if (leaderboard.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">No scores yet. Beat the AI to get on the leaderboard!</p>';
+            } else {
+                let html = '<table class="leaderboard-table"><thead><tr><th>Rank</th><th>Name</th><th>Score</th><th>Difficulty</th></tr></thead><tbody>';
+
+                leaderboard.forEach((entry, index) => {
+                    const medals = ['🥇', '🥈', '🥉'];
+                    const medal = index < 3 ? `<span class="rank-medal">${medals[index]}</span>` : '';
+                    const rank = medal || `${index + 1}.`;
+
+                    html += `
+                        <tr>
+                            <td>${rank}</td>
+                            <td><strong>${entry.name}</strong></td>
+                            <td>${entry.score}</td>
+                            <td><span class="difficulty-badge ${getDifficultyClass(entry.difficulty)}">${getDifficultyDisplayName(entry.difficulty)}</span></td>
+                        </tr>
+                    `;
+                });
+
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeLeaderboard() {
+            document.getElementById('leaderboardModal').classList.add('hidden');
+        }
+
+        function handleNameInput(index) {
+            const input = document.getElementById(`nameChar${index + 1}`);
+            const value = input.value;
+
+            // Only allow letters
+            if (value && !/^[a-zA-Z]$/.test(value)) {
+                input.value = '';
+                return;
+            }
+
+            // Auto-focus next input
+            if (value && index < 2) {
+                document.getElementById(`nameChar${index + 2}`).focus();
+            }
+
+            // Clear error when user types
+            document.getElementById('nameError').textContent = '';
+        }
+
+        function submitScore() {
+            // Get name from inputs
+            const char1 = document.getElementById('nameChar1').value;
+            const char2 = document.getElementById('nameChar2').value;
+            const char3 = document.getElementById('nameChar3').value;
+
+            const name = (char1 + char2 + char3).toUpperCase();
+
+            // Validate name
+            if (name.length !== 3) {
+                document.getElementById('nameError').textContent = 'Please enter 3 letters';
+                return;
+            }
+
+            if (containsBadWord(name)) {
+                document.getElementById('nameError').textContent = 'Invalid name. Please choose another.';
+                return;
+            }
+
+            // Save to leaderboard
+            saveToLeaderboard(name, currentScore, gameMode);
+
+            // Hide name entry modal
+            document.getElementById('nameEntryModal').classList.add('hidden');
+
+            // Update home leaderboard
+            displayHomeLeaderboard();
+
+            // Show leaderboard
+            showLeaderboard();
+        }
+
+        function showNameEntryModal(score) {
+            currentScore = score;
+            document.getElementById('finalScore').textContent = score;
+
+            // Clear inputs
+            document.getElementById('nameChar1').value = '';
+            document.getElementById('nameChar2').value = '';
+            document.getElementById('nameChar3').value = '';
+            document.getElementById('nameError').textContent = '';
+
+            // Show modal
+            document.getElementById('nameEntryModal').classList.remove('hidden');
+
+            // Focus first input
+            setTimeout(() => {
+                document.getElementById('nameChar1').focus();
+            }, 100);
+        }
+
+        // Initialize home leaderboard on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            displayHomeLeaderboard();
+        });
     </script>
 </body>
 </html>
