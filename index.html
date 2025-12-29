@@ -678,10 +678,11 @@
         </div>
 
         <!-- Name Entry Modal -->
-        <div id="nameEntryModal" class="name-entry-modal hidden">
+        <div id="nameEntryModal" class="name-entry-modal hidden" style="display: none !important;">
             <div class="name-entry-content">
                 <h2>🎉 YOU WIN! 🎉</h2>
                 <div class="score-display" id="finalScore">0</div>
+                <div id="scoreBreakdown" style="font-size: 0.9em; margin: 10px 0; opacity: 0.9;"></div>
                 <p style="margin-bottom: 20px;">Enter your name:</p>
                 <div class="name-input-container">
                     <input type="text" maxlength="1" class="name-input" id="nameChar1" oninput="handleNameInput(0)">
@@ -829,7 +830,12 @@
         function resetToMenu() {
             document.getElementById('modeSelection').classList.remove('hidden');
             document.getElementById('gameArea').classList.add('hidden');
-            document.getElementById('nameEntryModal').classList.add('hidden'); // Ensure modal is hidden
+
+            // Ensure modal is hidden and restore display: none
+            const modal = document.getElementById('nameEntryModal');
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+
             gameMode = null;
             gameStartTime = null; // Reset timer
             turnCount = 0;
@@ -1845,8 +1851,10 @@
             // Save to leaderboard
             saveToLeaderboard(name, currentScore, gameMode);
 
-            // Hide name entry modal
-            document.getElementById('nameEntryModal').classList.add('hidden');
+            // Hide name entry modal and restore display: none
+            const modal = document.getElementById('nameEntryModal');
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
 
             // Update home leaderboard
             displayHomeLeaderboard();
@@ -1875,7 +1883,38 @@
             }
 
             currentScore = score;
+
+            // Calculate score breakdown
+            const timeInSeconds = (Date.now() - gameStartTime) / 1000;
+            const basePoints = {
+                'ai-easy': 100,
+                'ai-hard': 250,
+                'ai-extreme': 500
+            };
+            const base = basePoints[gameMode];
+            const timeMultiplier = Math.max(0.5, 2 - (timeInSeconds / 120));
+            const timeBonus = Math.floor((timeMultiplier - 1) * base);
+
+            // Display score and breakdown
             document.getElementById('finalScore').textContent = score;
+            const difficultyNames = {
+                'ai-easy': 'Easy',
+                'ai-hard': 'Hard',
+                'ai-extreme': 'EXTREME'
+            };
+            const breakdownHTML = `
+                <div style="text-align: left; display: inline-block;">
+                    <div>${difficultyNames[gameMode]} Difficulty: ${base} pts</div>
+                    <div>Time Bonus: ${timeBonus >= 0 ? '+' : ''}${timeBonus} pts</div>
+                    <div style="border-top: 1px solid rgba(255,255,255,0.3); margin-top: 5px; padding-top: 5px;">
+                        <strong>Total: ${score} pts</strong>
+                    </div>
+                    <div style="font-size: 0.85em; margin-top: 5px; opacity: 0.8;">
+                        Time: ${Math.floor(timeInSeconds)}s
+                    </div>
+                </div>
+            `;
+            document.getElementById('scoreBreakdown').innerHTML = breakdownHTML;
 
             // Clear inputs
             document.getElementById('nameChar1').value = '';
@@ -1885,8 +1924,10 @@
             document.getElementById('nameChar5').value = '';
             document.getElementById('nameError').textContent = '';
 
-            // Show modal
-            document.getElementById('nameEntryModal').classList.remove('hidden');
+            // CRITICAL: Remove the inline display: none style to allow modal to show
+            const modal = document.getElementById('nameEntryModal');
+            modal.style.display = '';
+            modal.classList.remove('hidden');
 
             // Focus first input
             setTimeout(() => {
@@ -1896,19 +1937,19 @@
 
         // Initialize home leaderboard on page load
         window.addEventListener('DOMContentLoaded', () => {
-            // CRITICAL: Force hide all modals on page load
+            // CRITICAL: Ensure modal is absolutely hidden on page load
             const nameModal = document.getElementById('nameEntryModal');
             const leaderboardModal = document.getElementById('leaderboardModal');
 
             if (nameModal) {
                 nameModal.classList.add('hidden');
-                nameModal.style.display = 'none'; // Force hide with inline style too
+                // Keep the display: none !important; inline style from HTML
             }
             if (leaderboardModal) {
                 leaderboardModal.classList.add('hidden');
             }
 
-            // Reset all game state variables
+            // Reset all game state variables to ensure clean start
             gameMode = null;
             gameStartTime = null;
             gameOver = false;
@@ -1916,11 +1957,6 @@
 
             // Display home leaderboard
             displayHomeLeaderboard();
-
-            // After a brief delay, remove inline style to allow CSS to work
-            setTimeout(() => {
-                if (nameModal) nameModal.style.display = '';
-            }, 100);
         });
     </script>
 </body>
