@@ -54,9 +54,10 @@
 
         .mode-buttons {
             display: flex;
-            gap: 15px;
+            gap: 10px;
             flex-wrap: wrap;
             justify-content: center;
+            align-items: center;
         }
 
         .mode-button {
@@ -207,63 +208,17 @@
             background: rgba(255, 215, 0, 0.9);
             pointer-events: none;
             z-index: 10;
-            animation: winLineGrow 0.6s ease-out forwards;
-            will-change: opacity;
-            -webkit-animation: winLineGrow 0.6s ease-out forwards;
+            opacity: 0;
+            transition: opacity 0.4s ease-in;
+        }
+
+        .win-line.show {
+            opacity: 1;
         }
 
         .win-line.macro-win {
             background: rgba(76, 175, 80, 0.9);
             box-shadow: 0 0 10px rgba(76, 175, 80, 0.6);
-        }
-
-        .win-line.diagonal-line {
-            animation: winLineDiagonalGrow 0.6s ease-out forwards;
-            -webkit-animation: winLineDiagonalGrow 0.6s ease-out forwards;
-        }
-
-        @keyframes winLineGrow {
-            from {
-                opacity: 0;
-                transform: scaleX(0);
-            }
-            to {
-                opacity: 1;
-                transform: scaleX(1);
-            }
-        }
-
-        @-webkit-keyframes winLineGrow {
-            from {
-                opacity: 0;
-                -webkit-transform: scaleX(0);
-            }
-            to {
-                opacity: 1;
-                -webkit-transform: scaleX(1);
-            }
-        }
-
-        @keyframes winLineDiagonalGrow {
-            from {
-                opacity: 0;
-                transform: translate(-50%, -50%) rotate(var(--rotation-angle)) scaleX(0);
-            }
-            to {
-                opacity: 1;
-                transform: translate(-50%, -50%) rotate(var(--rotation-angle)) scaleX(1);
-            }
-        }
-
-        @-webkit-keyframes winLineDiagonalGrow {
-            from {
-                opacity: 0;
-                -webkit-transform: translate(-50%, -50%) rotate(var(--rotation-angle)) scaleX(0);
-            }
-            to {
-                opacity: 1;
-                -webkit-transform: translate(-50%, -50%) rotate(var(--rotation-angle)) scaleX(1);
-            }
         }
 
         .controls {
@@ -290,12 +245,13 @@
         }
 
         .rules {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px;
-            border-radius: 10px;
+            background: transparent;
+            padding: 20px 0;
+            border-radius: 0;
             margin-top: 20px;
             max-width: 600px;
             text-align: left;
+            border-top: 2px solid rgba(102, 126, 234, 0.2);
         }
 
         .rules h2 {
@@ -382,13 +338,13 @@
             }
 
             .rules {
-                padding: 15px;
+                padding: 15px 0;
                 margin-top: 15px;
                 font-size: 14px;
             }
 
             .rules h2 {
-                font-size: 1.1em;
+                font-size: 1em;
             }
 
             .rules li {
@@ -446,15 +402,6 @@
                 font-size: 40px;
             }
 
-            .win-line {
-                min-height: 3px !important;
-                min-width: 3px !important;
-            }
-
-            .win-line.macro-win {
-                min-height: 5px !important;
-                min-width: 5px !important;
-            }
 
             button {
                 padding: 8px 16px;
@@ -462,13 +409,13 @@
             }
 
             .rules {
-                padding: 12px;
+                padding: 10px 0;
                 margin-top: 10px;
                 font-size: 12px;
             }
 
             .rules h2 {
-                font-size: 1em;
+                font-size: 0.9em;
                 margin-bottom: 8px;
             }
 
@@ -522,6 +469,17 @@
                 <button class="mode-button" onclick="startGame('ai-hard')">vs AI (Hard)</button>
                 <button class="mode-button" onclick="startGame('ai-extreme')">vs AI (EXTREME)</button>
             </div>
+
+            <div class="rules">
+                <h2>How to Play</h2>
+                <ul>
+                    <li>Each cell contains a mini Tic Tac Toe board</li>
+                    <li>Your move position determines where your opponent plays next</li>
+                    <li>Win mini boards to claim them on the macro board</li>
+                    <li>Get 3 macro board cells in a row to win!</li>
+                    <li>If sent to a won/full board, you can play anywhere</li>
+                </ul>
+            </div>
         </div>
 
         <div id="gameArea" class="hidden">
@@ -532,17 +490,6 @@
             <div class="controls">
                 <button onclick="resetToMenu()">Back to Menu</button>
             </div>
-        </div>
-
-        <div class="rules">
-            <h2>How to Play</h2>
-            <ul>
-                <li>Each cell contains a mini Tic Tac Toe board</li>
-                <li>Your move position determines where your opponent plays next</li>
-                <li>Win mini boards to claim them on the macro board</li>
-                <li>Get 3 macro board cells in a row to win!</li>
-                <li>If sent to a won/full board, you can play anywhere</li>
-            </ul>
         </div>
     </div>
 
@@ -1340,12 +1287,16 @@
                 line.style.left = '50%';
                 line.style.top = '50%';
                 const angle = a === 0 ? 45 : -45;
-                line.style.transformOrigin = 'center center';
-                line.style.setProperty('--rotation-angle', `${angle}deg`);
-                line.classList.add('diagonal-line');
+                line.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+                line.style.webkitTransform = `translate(-50%, -50%) rotate(${angle}deg)`;
             }
 
             boardElement.appendChild(line);
+
+            // Trigger fade-in animation
+            setTimeout(() => {
+                line.classList.add('show');
+            }, 10);
         }
 
         function updateBoardState() {
