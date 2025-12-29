@@ -7,6 +7,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -701,6 +706,22 @@
     </div>
 
     <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyD6aankLI5JyR1-XSNuf_vf9NIkIXtaUEU",
+            authDomain: "super-tic-tac-toe-95e21.firebaseapp.com",
+            databaseURL: "https://super-tic-tac-toe-95e21-default-rtdb.firebaseio.com/",
+            projectId: "super-tic-tac-toe-95e21",
+            storageBucket: "super-tic-tac-toe-95e21.firebasestorage.app",
+            messagingSenderId: "796581669872",
+            appId: "1:796581669872:web:59be366351372de7ac0b35",
+            measurementId: "G-CLPFTDPZWQ"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
         // Game state
         let currentPlayer = 'X';
         let activeBoard = null;
@@ -1628,32 +1649,67 @@
             return Math.floor(basePoints[difficulty] * timeMultiplier);
         }
 
-        function getLeaderboard() {
-            const data = localStorage.getItem('superTTTLeaderboard');
-            return data ? JSON.parse(data) : [];
+        function getLeaderboard(callback) {
+            // Fetch from Firebase
+            database.ref('leaderboard').orderByChild('score').limitToLast(100).once('value')
+                .then((snapshot) => {
+                    const leaderboard = [];
+                    snapshot.forEach((childSnapshot) => {
+                        leaderboard.push(childSnapshot.val());
+                    });
+                    // Reverse to get highest scores first
+                    leaderboard.reverse();
+                    callback(leaderboard);
+                })
+                .catch((error) => {
+                    console.error('Error fetching leaderboard:', error);
+                    callback([]);
+                });
         }
 
         function saveToLeaderboard(name, score, difficulty) {
-            const leaderboard = getLeaderboard();
-
-            leaderboard.push({
+            const newEntry = {
                 name: name.toUpperCase(),
                 score: score,
                 difficulty: difficulty,
                 timestamp: Date.now()
-            });
+            };
 
-            // Sort by score (highest first), then by timestamp (earliest first)
-            leaderboard.sort((a, b) => {
-                if (b.score !== a.score) return b.score - a.score;
-                return a.timestamp - b.timestamp;
-            });
+            // Push to Firebase
+            database.ref('leaderboard').push(newEntry)
+                .then(() => {
+                    console.log('Score saved to global leaderboard!');
+                    // Clean up old entries (keep top 100)
+                    cleanupLeaderboard();
+                })
+                .catch((error) => {
+                    console.error('Error saving score:', error);
+                });
+        }
 
-            // Keep only top 100 scores
-            const topScores = leaderboard.slice(0, 100);
-            localStorage.setItem('superTTTLeaderboard', JSON.stringify(topScores));
+        function cleanupLeaderboard() {
+            // Get all entries, sort by score, and remove lowest ones beyond top 100
+            database.ref('leaderboard').orderByChild('score').once('value')
+                .then((snapshot) => {
+                    const entries = [];
+                    snapshot.forEach((childSnapshot) => {
+                        entries.push({
+                            key: childSnapshot.key,
+                            data: childSnapshot.val()
+                        });
+                    });
 
-            return topScores;
+                    // If more than 100 entries, remove the lowest scores
+                    if (entries.length > 100) {
+                        const toRemove = entries.slice(0, entries.length - 100);
+                        toRemove.forEach(entry => {
+                            database.ref('leaderboard/' + entry.key).remove();
+                        });
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error cleaning up leaderboard:', error);
+                });
         }
 
         function getDifficultyDisplayName(difficulty) {
@@ -1675,48 +1731,20 @@
         }
 
         function displayHomeLeaderboard() {
-            const leaderboard = getLeaderboard();
             const container = document.getElementById('homeLeaderboardContent');
+            container.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">Loading...</p>';
 
-            if (leaderboard.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No scores yet. Be the first!</p>';
-                return;
-            }
+            getLeaderboard((leaderboard) => {
+                if (leaderboard.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No scores yet. Be the first!</p>';
+                    return;
+                }
 
-            // Show top 5 scores
-            const top5 = leaderboard.slice(0, 5);
-            let html = '<table class="leaderboard-table"><thead><tr><th>Rank</th><th>Name</th><th>Score</th><th>Difficulty</th></tr></thead><tbody>';
-
-            top5.forEach((entry, index) => {
-                const medals = ['🥇', '🥈', '🥉'];
-                const medal = index < 3 ? `<span class="rank-medal">${medals[index]}</span>` : '';
-                const rank = medal || `${index + 1}.`;
-
-                html += `
-                    <tr>
-                        <td>${rank}</td>
-                        <td><strong>${entry.name}</strong></td>
-                        <td>${entry.score}</td>
-                        <td><span class="difficulty-badge ${getDifficultyClass(entry.difficulty)}">${getDifficultyDisplayName(entry.difficulty)}</span></td>
-                    </tr>
-                `;
-            });
-
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        }
-
-        function showLeaderboard() {
-            const leaderboard = getLeaderboard();
-            const modal = document.getElementById('leaderboardModal');
-            const container = document.getElementById('leaderboardTable');
-
-            if (leaderboard.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">No scores yet. Beat the AI to get on the leaderboard!</p>';
-            } else {
+                // Show top 5 scores
+                const top5 = leaderboard.slice(0, 5);
                 let html = '<table class="leaderboard-table"><thead><tr><th>Rank</th><th>Name</th><th>Score</th><th>Difficulty</th></tr></thead><tbody>';
 
-                leaderboard.forEach((entry, index) => {
+                top5.forEach((entry, index) => {
                     const medals = ['🥇', '🥈', '🥉'];
                     const medal = index < 3 ? `<span class="rank-medal">${medals[index]}</span>` : '';
                     const rank = medal || `${index + 1}.`;
@@ -1733,9 +1761,41 @@
 
                 html += '</tbody></table>';
                 container.innerHTML = html;
-            }
+            });
+        }
 
+        function showLeaderboard() {
+            const modal = document.getElementById('leaderboardModal');
+            const container = document.getElementById('leaderboardTable');
+
+            container.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">Loading global leaderboard...</p>';
             modal.classList.remove('hidden');
+
+            getLeaderboard((leaderboard) => {
+                if (leaderboard.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">No scores yet. Beat the AI to get on the leaderboard!</p>';
+                } else {
+                    let html = '<table class="leaderboard-table"><thead><tr><th>Rank</th><th>Name</th><th>Score</th><th>Difficulty</th></tr></thead><tbody>';
+
+                    leaderboard.forEach((entry, index) => {
+                        const medals = ['🥇', '🥈', '🥉'];
+                        const medal = index < 3 ? `<span class="rank-medal">${medals[index]}</span>` : '';
+                        const rank = medal || `${index + 1}.`;
+
+                        html += `
+                            <tr>
+                                <td>${rank}</td>
+                                <td><strong>${entry.name}</strong></td>
+                                <td>${entry.score}</td>
+                                <td><span class="difficulty-badge ${getDifficultyClass(entry.difficulty)}">${getDifficultyDisplayName(entry.difficulty)}</span></td>
+                            </tr>
+                        `;
+                    });
+
+                    html += '</tbody></table>';
+                    container.innerHTML = html;
+                }
+            });
         }
 
         function closeLeaderboard() {
