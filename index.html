@@ -1823,6 +1823,11 @@
 
         // Initialize home leaderboard on page load
         window.addEventListener('DOMContentLoaded', () => {
+            // Ensure all modals are hidden on page load
+            document.getElementById('nameEntryModal').classList.add('hidden');
+            document.getElementById('leaderboardModal').classList.add('hidden');
+
+            // Display home leaderboard
             displayHomeLeaderboard();
         });
     </script>
