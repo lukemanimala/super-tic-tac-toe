@@ -806,7 +806,9 @@
         function resetToMenu() {
             document.getElementById('modeSelection').classList.remove('hidden');
             document.getElementById('gameArea').classList.add('hidden');
+            document.getElementById('nameEntryModal').classList.add('hidden'); // Ensure modal is hidden
             gameMode = null;
+            gameStartTime = null; // Reset timer
             turnCount = 0;
             updateBackgroundGradient();
         }
@@ -886,13 +888,17 @@
                 updateBoardState();
 
                 // Show leaderboard entry for player wins against AI
-                if (gameMode !== '2player' && gameMode !== null && macroWinInfo.winner !== aiPlayer) {
+                if (gameMode !== '2player' && gameMode !== null && macroWinInfo.winner !== aiPlayer && gameStartTime !== null) {
                     const gameEndTime = Date.now();
                     const timeInSeconds = (gameEndTime - gameStartTime) / 1000;
                     const score = calculateScore(gameMode, timeInSeconds);
-                    setTimeout(() => {
-                        showNameEntryModal(score);
-                    }, 1500); // Wait for celebration
+
+                    // Only show if score is valid (defensive check)
+                    if (score > 0) {
+                        setTimeout(() => {
+                            showNameEntryModal(score);
+                        }, 1500); // Wait for celebration
+                    }
                 }
 
                 return true;
@@ -1779,6 +1785,11 @@
         }
 
         function showNameEntryModal(score) {
+            // Defensive check: don't show if score is invalid or no game mode
+            if (!score || score <= 0 || !gameMode || gameMode === '2player') {
+                return;
+            }
+
             currentScore = score;
             document.getElementById('finalScore').textContent = score;
 
