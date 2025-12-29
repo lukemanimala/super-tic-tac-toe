@@ -399,9 +399,9 @@
         }
 
         .name-input {
-            width: 60px;
-            height: 80px;
-            font-size: 2.5em;
+            width: 50px;
+            height: 70px;
+            font-size: 2em;
             text-align: center;
             text-transform: uppercase;
             border: 3px solid white;
@@ -682,6 +682,8 @@
                     <input type="text" maxlength="1" class="name-input" id="nameChar1" oninput="handleNameInput(0)">
                     <input type="text" maxlength="1" class="name-input" id="nameChar2" oninput="handleNameInput(1)">
                     <input type="text" maxlength="1" class="name-input" id="nameChar3" oninput="handleNameInput(2)">
+                    <input type="text" maxlength="1" class="name-input" id="nameChar4" oninput="handleNameInput(3)">
+                    <input type="text" maxlength="1" class="name-input" id="nameChar5" oninput="handleNameInput(4)">
                 </div>
                 <div class="error-message" id="nameError"></div>
                 <button class="submit-score-btn" onclick="submitScore()">Submit Score</button>
@@ -1596,8 +1598,15 @@
 
         // ===== LEADERBOARD FUNCTIONS =====
 
-        // Bad words filter (3-letter combinations)
-        const badWords = ['ass', 'fuk', 'fuc', 'wtf', 'dmn', 'sht', 'cok', 'dik', 'fag', 'cnt'];
+        // Bad words filter
+        const badWords = [
+            // 3-letter
+            'ass', 'fuk', 'fuc', 'wtf', 'dmn', 'sht', 'cok', 'dik', 'fag', 'cnt', 'kik', 'kys',
+            // 4-letter
+            'shit', 'fuck', 'damn', 'dick', 'cock', 'cunt', 'slut', 'whore', 'piss', 'arse', 'nazi',
+            // 5-letter
+            'bitch', 'whore', 'penis', 'pussy', 'vagina', 'anus'
+        ];
 
         function containsBadWord(name) {
             const lowerName = name.toLowerCase();
@@ -1744,7 +1753,7 @@
             }
 
             // Auto-focus next input
-            if (value && index < 2) {
+            if (value && index < 4) {
                 document.getElementById(`nameChar${index + 2}`).focus();
             }
 
@@ -1757,12 +1766,14 @@
             const char1 = document.getElementById('nameChar1').value;
             const char2 = document.getElementById('nameChar2').value;
             const char3 = document.getElementById('nameChar3').value;
+            const char4 = document.getElementById('nameChar4').value;
+            const char5 = document.getElementById('nameChar5').value;
 
-            const name = (char1 + char2 + char3).toUpperCase();
+            const name = (char1 + char2 + char3 + char4 + char5).toUpperCase();
 
             // Validate name
-            if (name.length !== 3) {
-                document.getElementById('nameError').textContent = 'Please enter 3 letters';
+            if (name.length !== 5) {
+                document.getElementById('nameError').textContent = 'Please enter 5 letters';
                 return;
             }
 
@@ -1797,6 +1808,8 @@
             document.getElementById('nameChar1').value = '';
             document.getElementById('nameChar2').value = '';
             document.getElementById('nameChar3').value = '';
+            document.getElementById('nameChar4').value = '';
+            document.getElementById('nameChar5').value = '';
             document.getElementById('nameError').textContent = '';
 
             // Show modal
