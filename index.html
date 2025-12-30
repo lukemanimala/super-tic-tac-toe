@@ -2989,19 +2989,24 @@
                 'ai-extreme': 500
             };
 
-            // Time multiplier (faster = better, but slower doesn't hurt much)
-            // Under 60 seconds: 2.0x bonus
-            // 60-180 seconds: 2.0x down to 1.0x (gradual decrease)
-            // Over 180 seconds: stays at 1.0x (no penalty for taking your time)
-            let timeMultiplier;
-            if (timeInSeconds < 60) {
-                timeMultiplier = 2.0; // Full bonus for quick wins
-            } else if (timeInSeconds < 180) {
-                // Gradual decrease from 2.0x to 1.0x over 120 seconds
-                timeMultiplier = 2.0 - ((timeInSeconds - 60) / 120);
-            } else {
-                timeMultiplier = 1.0; // No penalty for slow play
-            }
+            // Target time by difficulty (reasonable completion time)
+            const targetTime = {
+                'ai-easy': 120,    // 2 minutes
+                'ai-hard': 90,     // 1.5 minutes
+                'ai-extreme': 60   // 1 minute
+            };
+
+            // Score formula: basePoints * max(1.0, targetTime / actualTime)
+            // - Faster than target: multiplier > 1.0 (uncapped!)
+            // - Slower than target: multiplier = 1.0 (no penalty)
+            // Examples for Easy (base 100, target 120s):
+            //   - 120s: 100 * 1.0 = 100
+            //   - 60s:  100 * 2.0 = 200
+            //   - 30s:  100 * 4.0 = 400
+            //   - 12s:  100 * 10.0 = 1000
+            //   - 180s: 100 * 1.0 = 100 (no penalty)
+            const target = targetTime[difficulty];
+            const timeMultiplier = Math.max(1.0, target / timeInSeconds);
 
             return Math.floor(basePoints[difficulty] * timeMultiplier);
         }
