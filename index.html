@@ -301,6 +301,31 @@
             width: 100%;
             max-height: 80vh;
             overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 32px;
+            color: #999;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            line-height: 1;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close-btn:hover {
+            color: #667eea;
+            transform: scale(1.1);
         }
 
         .leaderboard-content h2 {
@@ -873,6 +898,7 @@
         <!-- Leaderboard Modal -->
         <div id="leaderboardModal" class="leaderboard-modal hidden">
             <div class="leaderboard-content">
+                <button class="modal-close-btn" onclick="closeLeaderboard()">&times;</button>
                 <h2>🏆 Leaderboard</h2>
 
                 <!-- Tab Buttons -->
@@ -896,8 +922,6 @@
                 <div id="playersTab" class="tab-content hidden">
                     <div id="playersTable"></div>
                 </div>
-
-                <button onclick="closeLeaderboard()" style="width: 100%; margin-top: 20px;">Close</button>
             </div>
         </div>
 
@@ -2775,6 +2799,14 @@
             gameStartTime = null;
             gameOver = false;
             currentScore = 0;
+
+            // Check if there's a game ID in the URL (shareable link)
+            const gameIdFromUrl = getGameIdFromUrl();
+            if (gameIdFromUrl && gameIdFromUrl.length === 6) {
+                // Auto-fill the join game input and show join modal
+                document.getElementById('joinGameInput').value = gameIdFromUrl;
+                showJoinGame();
+            }
 
             // Display home leaderboard
             displayHomeLeaderboard();
