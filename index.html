@@ -1468,26 +1468,50 @@
                         return; // Abort transaction
                     }
 
+                    console.log('Transaction currentState:', currentState);
+
                     // Server-side validation
                     if (currentState.currentPlayer !== localPlayerSide) {
                         console.log('Transaction aborted: not your turn');
                         return; // Abort - not our turn
                     }
 
-                    // Convert Firebase objects to arrays for validation - handle undefined
-                    const stateMacroState = currentState.macroState
-                        ? Array.from({ length: 9 }, (_, i) => (currentState.macroState[i] !== undefined ? currentState.macroState[i] : null))
-                        : Array(9).fill(null);
+                    // Convert Firebase state to proper arrays - Firebase converts arrays to objects
+                    let stateMacroState;
+                    if (Array.isArray(currentState.macroState)) {
+                        stateMacroState = [...currentState.macroState];
+                    } else if (currentState.macroState && typeof currentState.macroState === 'object') {
+                        stateMacroState = Object.keys(currentState.macroState).sort().map(k => currentState.macroState[k]);
+                        // Ensure length 9
+                        while (stateMacroState.length < 9) stateMacroState.push(null);
+                    } else {
+                        stateMacroState = Array(9).fill(null);
+                    }
 
-                    const stateMicroBoards = currentState.microBoards
-                        ? Array.from({ length: 9 }, (_, i) => {
-                            const board = currentState.microBoards[i];
-                            if (board) {
-                                return Array.from({ length: 9 }, (_, j) => (board[j] !== undefined ? board[j] : null));
+                    let stateMicroBoards;
+                    if (Array.isArray(currentState.microBoards)) {
+                        stateMicroBoards = currentState.microBoards.map(board =>
+                            Array.isArray(board) ? [...board] : Array(9).fill(null)
+                        );
+                    } else if (currentState.microBoards && typeof currentState.microBoards === 'object') {
+                        stateMicroBoards = Object.keys(currentState.microBoards).sort().map(k => {
+                            const board = currentState.microBoards[k];
+                            if (Array.isArray(board)) {
+                                return [...board];
+                            } else if (board && typeof board === 'object') {
+                                const arr = Object.keys(board).sort().map(j => board[j]);
+                                while (arr.length < 9) arr.push(null);
+                                return arr;
                             }
                             return Array(9).fill(null);
-                          })
-                        : Array(9).fill(null).map(() => Array(9).fill(null));
+                        });
+                        // Ensure length 9
+                        while (stateMicroBoards.length < 9) stateMicroBoards.push(Array(9).fill(null));
+                    } else {
+                        stateMicroBoards = Array(9).fill(null).map(() => Array(9).fill(null));
+                    }
+
+                    console.log('Converted arrays:', { stateMacroState, stateMicroBoards });
 
                     if (stateMacroState[macroIndex] !== null) return; // Board won
                     if (stateMicroBoards[macroIndex][microIndex] !== null) return; // Cell filled
