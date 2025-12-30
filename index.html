@@ -455,31 +455,33 @@
         /* Leaderboard Tabs */
         .leaderboard-tabs {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             margin-bottom: 20px;
-            border-bottom: 2px solid #ddd;
+            justify-content: center;
         }
 
         .tab-button {
-            background: none;
-            color: #667eea;
-            border: none;
-            padding: 10px 20px;
-            font-size: 16px;
+            background: #f0f0f0;
+            color: #333;
+            border: 2px solid #ddd;
+            padding: 10px 24px;
+            font-size: 15px;
             font-weight: bold;
             cursor: pointer;
-            border-bottom: 3px solid transparent;
+            border-radius: 20px;
             transition: all 0.3s ease;
             font-family: 'DM Sans', sans-serif;
         }
 
         .tab-button:hover {
-            background: rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
 
         .tab-button.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
         }
 
         .difficulty-filters {
@@ -735,6 +737,7 @@
 
         <div id="gameArea" class="hidden">
             <div class="game-info" id="gameInfo">Player X's turn - Play anywhere</div>
+            <div id="difficultyDisplay" style="margin-bottom: 10px;"></div>
 
             <div class="macro-board" id="macroBoard"></div>
 
@@ -904,19 +907,36 @@
                     return;
 
                 case 'lose':
-                    // Sad descending tones
-                    const sadNotes = [392.00, 349.23, 293.66, 261.63];
+                    // Very sad descending tones with minor key progression
+                    const sadNotes = [349.23, 329.63, 293.66, 261.63, 246.94];
                     sadNotes.forEach((freq, i) => {
                         const osc = audioContext.createOscillator();
                         const gain = audioContext.createGain();
                         osc.connect(gain);
                         gain.connect(audioContext.destination);
                         osc.frequency.value = freq;
-                        osc.type = 'sine';
-                        gain.gain.setValueAtTime(0.2, audioContext.currentTime + i * 0.2);
-                        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.2 + 0.5);
-                        osc.start(audioContext.currentTime + i * 0.2);
-                        osc.stop(audioContext.currentTime + i * 0.2 + 0.5);
+                        osc.type = 'triangle'; // More mournful than sine
+                        gain.gain.setValueAtTime(0.25, audioContext.currentTime + i * 0.3);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.3 + 0.7);
+                        osc.start(audioContext.currentTime + i * 0.3);
+                        osc.stop(audioContext.currentTime + i * 0.3 + 0.7);
+                    });
+                    return;
+
+                case 'microLoss':
+                    // Short sad jingle for losing a micro board
+                    const microLossNotes = [329.63, 293.66, 261.63];
+                    microLossNotes.forEach((freq, i) => {
+                        const osc = audioContext.createOscillator();
+                        const gain = audioContext.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioContext.destination);
+                        osc.frequency.value = freq;
+                        osc.type = 'triangle';
+                        gain.gain.setValueAtTime(0.15, audioContext.currentTime + i * 0.15);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.15 + 0.3);
+                        osc.start(audioContext.currentTime + i * 0.15);
+                        osc.stop(audioContext.currentTime + i * 0.15 + 0.3);
                     });
                     return;
             }
@@ -931,6 +951,20 @@
             gameMode = mode;
             document.getElementById('modeSelection').classList.add('hidden');
             document.getElementById('gameArea').classList.remove('hidden');
+
+            // Show difficulty chip for AI modes
+            const difficultyDisplay = document.getElementById('difficultyDisplay');
+            if (mode !== '2player') {
+                const difficultyNames = {
+                    'ai-easy': 'Easy',
+                    'ai-hard': 'Hard',
+                    'ai-extreme': 'EXTREME'
+                };
+                difficultyDisplay.innerHTML = `<span class="difficulty-badge ${getDifficultyClass(mode)}">${difficultyNames[mode]}</span>`;
+            } else {
+                difficultyDisplay.innerHTML = '';
+            }
+
             resetGame();
         }
 
@@ -1008,7 +1042,13 @@
                 macroState[macroIndex] = winInfo.winner;
                 updateMicroBoardOverlay(macroIndex, winInfo.winner);
                 drawWinLine(macroIndex, winInfo.line, false);
-                playSound('microWin');
+
+                // Play appropriate sound for micro board win
+                if (gameMode !== '2player' && winInfo.winner === aiPlayer) {
+                    playSound('microLoss'); // AI won micro board - sad sound
+                } else {
+                    playSound('microWin'); // Player won micro board - happy sound
+                }
             } else if (microBoards[macroIndex].every(cell => cell !== null)) {
                 macroState[macroIndex] = 'draw';
                 updateMicroBoardOverlay(macroIndex, 'draw');
@@ -1762,9 +1802,19 @@
                 'ai-extreme': 500
             };
 
-            // Time multiplier (faster = better)
-            // Perfect score at 30 seconds, decreases linearly to 50% at 180 seconds
-            const timeMultiplier = Math.max(0.5, 2 - (timeInSeconds / 120));
+            // Time multiplier (faster = better, but slower doesn't hurt much)
+            // Under 60 seconds: 2.0x bonus
+            // 60-180 seconds: 2.0x down to 1.0x (gradual decrease)
+            // Over 180 seconds: stays at 1.0x (no penalty for taking your time)
+            let timeMultiplier;
+            if (timeInSeconds < 60) {
+                timeMultiplier = 2.0; // Full bonus for quick wins
+            } else if (timeInSeconds < 180) {
+                // Gradual decrease from 2.0x to 1.0x over 120 seconds
+                timeMultiplier = 2.0 - ((timeInSeconds - 60) / 120);
+            } else {
+                timeMultiplier = 1.0; // No penalty for slow play
+            }
 
             return Math.floor(basePoints[difficulty] * timeMultiplier);
         }
@@ -2106,7 +2156,16 @@
                 'ai-extreme': 500
             };
             const base = basePoints[gameMode];
-            const timeMultiplier = Math.max(0.5, 2 - (timeInSeconds / 120));
+
+            // Calculate time multiplier (same as calculateScore function)
+            let timeMultiplier;
+            if (timeInSeconds < 60) {
+                timeMultiplier = 2.0;
+            } else if (timeInSeconds < 180) {
+                timeMultiplier = 2.0 - ((timeInSeconds - 60) / 120);
+            } else {
+                timeMultiplier = 1.0;
+            }
             const timeBonus = Math.floor((timeMultiplier - 1) * base);
 
             // Display score and breakdown
