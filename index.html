@@ -1288,6 +1288,7 @@
         function subscribeToGameState(gameId) {
             const gameRef = database.ref(`${gamePathPrefix}/${gameId}`);
             let gameStarted = false;
+            let initialSyncDone = false;
 
             // Listen for all game updates
             gameStateListener = gameRef.on('value', (snapshot) => {
@@ -1301,15 +1302,20 @@
 
                 // If game is active and not started yet, start it
                 if (!gameStarted && gameData.metadata.status === 'active' && gameData.players.O) {
+                    console.log('Starting online game...');
                     gameStarted = true;
                     document.getElementById('waitingRoomModal').classList.add('hidden');
                     startOnlineGame(gameData);
+                    // Mark initial sync as done after a short delay to avoid immediate re-sync
+                    setTimeout(() => {
+                        initialSyncDone = true;
+                    }, 500);
                     return;
                 }
 
-                // If game already started, sync the state for move updates
-                if (gameStarted && gameMode === 'online') {
-                    console.log('Syncing game state update');
+                // If game already started, sync the state for move updates (skip the first immediate update)
+                if (gameStarted && initialSyncDone && gameMode === 'online') {
+                    console.log('Syncing game state update from opponent');
                     const previousPlayer = currentPlayer;
                     syncLocalStateFromRemote(gameData.gameState);
                     renderBoardFromState();
@@ -1339,6 +1345,10 @@
 
         // Start an online game
         function startOnlineGame(gameData) {
+            // Set mode FIRST before any other initialization
+            gameMode = 'online';
+            gameStartTime = Date.now();
+
             // Hide mode selection, show game area
             document.getElementById('modeSelection').classList.add('hidden');
             document.getElementById('gameArea').classList.remove('hidden');
@@ -1351,20 +1361,17 @@
             const opponentSide = localPlayerSide === 'X' ? 'O' : 'X';
             document.getElementById('opponentName').textContent = gameData.players[opponentSide].name;
 
-            // Initialize game state from Firebase
+            // Initialize game state from Firebase BEFORE creating UI
             syncLocalStateFromRemote(gameData.gameState);
+            console.log('Game state after sync:', { macroState, microBoards, currentPlayer, activeBoard });
 
-            // Initialize the board UI
+            // Initialize the board UI (this calls updateBoardState internally)
             initGame();
 
             // Render all existing moves on the board
             renderBoardFromState();
 
-            // Set mode
-            gameMode = 'online';
-            gameStartTime = Date.now();
-
-            // Update board state
+            // Final update to ensure board state is correct
             updateBoardState();
         }
 
