@@ -668,7 +668,7 @@
         .player-info {
             position: fixed;
             top: 20px;
-            right: 20px;
+            left: 220px;
             background: white;
             padding: 15px 20px;
             border-radius: 15px;
@@ -1293,6 +1293,7 @@
         let currentGameId = null;
         let localPlayerSide = null; // 'X' or 'O'
         let gameStateListener = null;
+        let gameData = null; // Current online game data from Firebase
         let presenceRef = null;
         let heartbeatInterval = null;
         let disconnectTimer = null;
@@ -1493,7 +1494,7 @@
                     return;
                 }
 
-                const gameData = snapshot.val();
+                gameData = snapshot.val();
                 console.log('Attempting to join game:', gameIdInput);
                 console.log('Game data:', gameData);
 
@@ -1565,7 +1566,7 @@
 
             // Listen for all game updates
             gameStateListener = gameRef.on('value', (snapshot) => {
-                const gameData = snapshot.val();
+                gameData = snapshot.val();
 
                 if (!gameData) {
                     // Game was deleted
