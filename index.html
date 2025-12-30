@@ -1327,6 +1327,9 @@
             // Initialize the board UI
             initGame();
 
+            // Render all existing moves on the board
+            renderBoardFromState();
+
             // Set mode
             gameMode = 'online';
             gameStartTime = Date.now();
@@ -1335,12 +1338,51 @@
             updateBoardState();
         }
 
+        // Render the board from current game state
+        function renderBoardFromState() {
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    if (microBoards[i] && microBoards[i][j]) {
+                        const microBoard = document.getElementById(`micro-${i}`);
+                        const cells = microBoard.querySelectorAll('.cell');
+                        const cell = cells[j];
+                        cell.textContent = microBoards[i][j];
+                        cell.classList.add('filled', microBoards[i][j].toLowerCase());
+                    }
+                }
+
+                // Render macro board overlays
+                if (macroState[i]) {
+                    const overlay = document.getElementById(`overlay-${i}`);
+                    const microBoard = document.getElementById(`micro-${i}`);
+
+                    if (macroState[i] === 'draw') {
+                        microBoard.classList.add('draw');
+                    } else {
+                        overlay.textContent = macroState[i];
+                        overlay.classList.add(macroState[i].toLowerCase());
+                        microBoard.classList.add('won');
+                    }
+                }
+            }
+        }
+
         // Sync local game state from remote Firebase data
         function syncLocalStateFromRemote(remoteState) {
             currentPlayer = remoteState.currentPlayer;
             activeBoard = remoteState.activeBoard;
-            macroState = remoteState.macroState;
-            microBoards = remoteState.microBoards;
+
+            // Convert Firebase objects back to arrays (Firebase converts arrays to objects)
+            macroState = Array.isArray(remoteState.macroState)
+                ? remoteState.macroState
+                : Object.values(remoteState.macroState || {});
+
+            microBoards = Array.isArray(remoteState.microBoards)
+                ? remoteState.microBoards
+                : Object.values(remoteState.microBoards || {}).map(board =>
+                    Array.isArray(board) ? board : Object.values(board || {})
+                  );
+
             gameOver = remoteState.gameOver;
             turnCount = remoteState.turnCount;
         }
@@ -2811,9 +2853,12 @@
             // Check if there's a game ID in the URL (shareable link)
             const gameIdFromUrl = getGameIdFromUrl();
             if (gameIdFromUrl && gameIdFromUrl.length === 6) {
-                // Auto-fill the join game input and show join modal
+                // Auto-join the game
                 document.getElementById('joinGameInput').value = gameIdFromUrl;
-                showJoinGame();
+                // Wait a moment for Firebase to initialize, then auto-join
+                setTimeout(() => {
+                    joinGameById();
+                }, 500);
             }
 
             // Display home leaderboard
