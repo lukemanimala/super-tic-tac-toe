@@ -520,6 +520,110 @@
             min-height: 300px;
         }
 
+        /* Online Multiplayer Styles */
+        .online-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .online-modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .online-modal-content h2 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .online-menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .online-action-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .online-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 100;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: bold;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.disconnected {
+            background: #F44336;
+            animation: none;
+        }
+
+        .status-dot.waiting {
+            background: #FF9800;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .opponent-info {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 100;
+            font-family: 'Space Grotesk', sans-serif;
+            text-align: left;
+        }
+
         /* Mobile Responsive Styles */
         @media screen and (max-width: 768px) {
             body {
@@ -715,6 +819,7 @@
                 <button class="mode-button" onclick="startGame('ai-easy')">vs AI (Easy)</button>
                 <button class="mode-button" onclick="startGame('ai-hard')">vs AI (Hard)</button>
                 <button class="mode-button" onclick="startGame('ai-extreme')">vs AI (EXTREME)</button>
+                <button class="mode-button" onclick="showOnlineMenu()">🌐 Play Online</button>
                 <button class="mode-button" onclick="showLeaderboard()">🏆 Leaderboard</button>
             </div>
 
@@ -795,6 +900,66 @@
                 <button onclick="closeLeaderboard()" style="width: 100%; margin-top: 20px;">Close</button>
             </div>
         </div>
+
+        <!-- Online Menu Modal -->
+        <div id="onlineMenuModal" class="online-modal hidden">
+            <div class="online-modal-content">
+                <h2>🌐 Play Online</h2>
+                <p style="margin-bottom: 30px; opacity: 0.9;">Play with a friend anywhere in the world!</p>
+                <div class="online-menu-buttons">
+                    <button class="online-action-btn" onclick="createOnlineGame()">Create Game</button>
+                    <button class="online-action-btn" onclick="showJoinGame()">Join Game</button>
+                </div>
+                <button onclick="closeOnlineMenu()" style="margin-top: 20px; padding: 10px 20px;">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Join Game Modal -->
+        <div id="joinGameModal" class="online-modal hidden">
+            <div class="online-modal-content">
+                <h2>Join Game</h2>
+                <p style="margin-bottom: 20px;">Enter the game code:</p>
+                <input type="text" id="joinGameInput" placeholder="ABC123" maxlength="6"
+                       style="font-size: 24px; text-align: center; padding: 15px; width: 200px; text-transform: uppercase; letter-spacing: 5px; font-family: 'Space Grotesk', sans-serif; border: 2px solid #667eea; border-radius: 10px;">
+                <div id="joinGameError" style="color: #e74c3c; margin-top: 10px; min-height: 20px;"></div>
+                <div style="margin-top: 20px;">
+                    <button class="online-action-btn" onclick="joinGameById()">Join</button>
+                    <button onclick="backToOnlineMenu()" style="margin-left: 10px; padding: 10px 20px;">Back</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Waiting Room Modal -->
+        <div id="waitingRoomModal" class="online-modal hidden">
+            <div class="online-modal-content">
+                <h2>Waiting for Opponent...</h2>
+                <div style="margin: 30px 0;">
+                    <div style="font-size: 48px; font-weight: bold; letter-spacing: 10px; color: #667eea; font-family: 'Space Grotesk', monospace;">
+                        <span id="waitingGameId"></span>
+                    </div>
+                </div>
+                <p style="margin-bottom: 20px;">Share this link with your friend:</p>
+                <div style="display: flex; gap: 10px; align-items: center; justify-content: center; margin-bottom: 30px;">
+                    <input type="text" id="shareableUrl" readonly
+                           style="flex: 1; max-width: 400px; padding: 12px; border: 2px solid #667eea; border-radius: 8px; font-family: monospace; font-size: 14px;">
+                    <button class="online-action-btn" onclick="copyShareableUrl()" style="padding: 12px 24px;">Copy Link</button>
+                </div>
+                <div id="copyFeedback" style="color: #43e97b; margin-bottom: 20px; min-height: 20px; font-weight: bold;"></div>
+                <button onclick="cancelWaitingRoom()">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Connection Status Indicator (shown during online games) -->
+        <div id="connectionStatus" class="connection-status hidden">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Connected</span>
+        </div>
+
+        <!-- Opponent Info Display (shown during online games) -->
+        <div id="opponentInfo" class="opponent-info hidden">
+            <div style="font-weight: bold; margin-bottom: 5px;">Opponent</div>
+            <div id="opponentName" style="font-size: 18px;">-</div>
+        </div>
     </div>
 
     <script>
@@ -829,6 +994,332 @@
         let currentScore = 0;
         let currentDifficultyFilter = 'all';
         let currentLeaderboardTab = 'games';
+
+        // Online multiplayer state
+        let isOnlineGame = false;
+        let currentGameId = null;
+        let localPlayerSide = null; // 'X' or 'O'
+        let gameStateListener = null;
+        let presenceRef = null;
+        let heartbeatInterval = null;
+        let disconnectTimer = null;
+
+        // Detect development vs production
+        const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const gamePathPrefix = isDevelopment ? 'games-dev' : 'games';
+
+        // ===== ONLINE MULTIPLAYER UTILITY FUNCTIONS =====
+
+        // Generate a random 6-character game ID (ABC123 format)
+        function generateGameId() {
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const numbers = '0123456789';
+            let id = '';
+            for (let i = 0; i < 3; i++) {
+                id += letters.charAt(Math.floor(Math.random() * letters.length));
+            }
+            for (let i = 0; i < 3; i++) {
+                id += numbers.charAt(Math.floor(Math.random() * numbers.length));
+            }
+            return id;
+        }
+
+        // Create a unique game ID by checking Firebase for collisions
+        async function createUniqueGameId() {
+            let attempts = 0;
+            while (attempts < 10) {
+                const id = generateGameId();
+                const snapshot = await database.ref(`${gamePathPrefix}/${id}`).once('value');
+                if (!snapshot.exists()) {
+                    return id;
+                }
+                attempts++;
+            }
+            throw new Error('Could not generate unique game ID');
+        }
+
+        // Get game ID from URL hash
+        function getGameIdFromUrl() {
+            const hash = window.location.hash;
+            if (hash && hash.length > 1) {
+                return hash.substring(1).toUpperCase();
+            }
+            return null;
+        }
+
+        // Set game ID in URL hash
+        function setGameIdInUrl(gameId) {
+            window.location.hash = gameId;
+        }
+
+        // Clear game ID from URL
+        function clearGameIdFromUrl() {
+            history.replaceState(null, null, ' ');
+        }
+
+        // Get saved player name from localStorage
+        function getSavedPlayerName() {
+            return localStorage.getItem('playerName') || null;
+        }
+
+        // ===== ONLINE MULTIPLAYER UI FUNCTIONS =====
+
+        // Show online menu modal
+        function showOnlineMenu() {
+            document.getElementById('onlineMenuModal').classList.remove('hidden');
+        }
+
+        // Close online menu modal
+        function closeOnlineMenu() {
+            document.getElementById('onlineMenuModal').classList.add('hidden');
+        }
+
+        // Show join game modal
+        function showJoinGame() {
+            document.getElementById('onlineMenuModal').classList.add('hidden');
+            document.getElementById('joinGameModal').classList.remove('hidden');
+            document.getElementById('joinGameInput').value = '';
+            document.getElementById('joinGameError').textContent = '';
+        }
+
+        // Go back to online menu
+        function backToOnlineMenu() {
+            document.getElementById('joinGameModal').classList.add('hidden');
+            document.getElementById('onlineMenuModal').classList.remove('hidden');
+        }
+
+        // Copy shareable URL to clipboard
+        function copyShareableUrl() {
+            const urlInput = document.getElementById('shareableUrl');
+            urlInput.select();
+            document.execCommand('copy');
+
+            const feedback = document.getElementById('copyFeedback');
+            feedback.textContent = '✓ Link copied!';
+            setTimeout(() => {
+                feedback.textContent = '';
+            }, 2000);
+        }
+
+        // Cancel waiting room
+        async function cancelWaitingRoom() {
+            if (currentGameId) {
+                // Delete the game from Firebase
+                await database.ref(`${gamePathPrefix}/${currentGameId}`).remove();
+                currentGameId = null;
+                clearGameIdFromUrl();
+            }
+
+            document.getElementById('waitingRoomModal').classList.add('hidden');
+            document.getElementById('onlineMenuModal').classList.remove('hidden');
+        }
+
+        // ===== ONLINE MULTIPLAYER CORE FUNCTIONS =====
+
+        // Create a new online game
+        async function createOnlineGame() {
+            try {
+                // Get player name
+                let playerName = getSavedPlayerName();
+                if (!playerName) {
+                    playerName = 'ANON' + Math.floor(Math.random() * 10);
+                }
+
+                // Generate unique game ID
+                const gameId = await createUniqueGameId();
+                currentGameId = gameId;
+                localPlayerSide = 'X'; // Host is always X
+                isOnlineGame = true;
+
+                // Create game in Firebase
+                await database.ref(`${gamePathPrefix}/${gameId}`).set({
+                    metadata: {
+                        status: 'waiting',
+                        createdAt: firebase.database.ServerValue.TIMESTAMP,
+                        lastActivityAt: firebase.database.ServerValue.TIMESTAMP,
+                        host: 'X',
+                        winner: null
+                    },
+                    players: {
+                        X: {
+                            name: playerName,
+                            isConnected: true,
+                            lastSeenAt: firebase.database.ServerValue.TIMESTAMP,
+                            disconnectedAt: null
+                        },
+                        O: null
+                    },
+                    gameState: {
+                        currentPlayer: 'X',
+                        activeBoard: null,
+                        macroState: Array(9).fill(null),
+                        microBoards: Array(9).fill(null).map(() => Array(9).fill(null)),
+                        turnCount: 0,
+                        gameOver: false,
+                        moves: []
+                    }
+                });
+
+                // Set URL
+                setGameIdInUrl(gameId);
+
+                // Show waiting room
+                document.getElementById('onlineMenuModal').classList.add('hidden');
+                document.getElementById('waitingRoomModal').classList.remove('hidden');
+                document.getElementById('waitingGameId').textContent = gameId;
+                document.getElementById('shareableUrl').value = window.location.href;
+
+                // Subscribe to game changes (waiting for player O to join)
+                subscribeToGameState(gameId);
+
+            } catch (error) {
+                console.error('Error creating game:', error);
+                alert('Failed to create game. Please try again.');
+            }
+        }
+
+        // Join an existing game by ID
+        async function joinGameById() {
+            try {
+                const gameIdInput = document.getElementById('joinGameInput').value.toUpperCase().trim();
+
+                if (gameIdInput.length !== 6) {
+                    document.getElementById('joinGameError').textContent = 'Game code must be 6 characters';
+                    return;
+                }
+
+                // Check if game exists
+                const gameRef = database.ref(`${gamePathPrefix}/${gameIdInput}`);
+                const snapshot = await gameRef.once('value');
+
+                if (!snapshot.exists()) {
+                    document.getElementById('joinGameError').textContent = 'Game not found';
+                    return;
+                }
+
+                const gameData = snapshot.val();
+
+                // Validate game state
+                if (gameData.metadata.status !== 'waiting') {
+                    document.getElementById('joinGameError').textContent = 'Game already in progress';
+                    return;
+                }
+
+                if (gameData.players.O !== null) {
+                    document.getElementById('joinGameError').textContent = 'Game is full';
+                    return;
+                }
+
+                // Get player name
+                let playerName = getSavedPlayerName();
+                if (!playerName) {
+                    playerName = 'ANON' + Math.floor(Math.random() * 10);
+                }
+
+                // Join as player O
+                currentGameId = gameIdInput;
+                localPlayerSide = 'O';
+                isOnlineGame = true;
+
+                // Update game in Firebase
+                await gameRef.update({
+                    'metadata/status': 'active',
+                    'metadata/lastActivityAt': firebase.database.ServerValue.TIMESTAMP,
+                    'players/O': {
+                        name: playerName,
+                        isConnected: true,
+                        lastSeenAt: firebase.database.ServerValue.TIMESTAMP,
+                        disconnectedAt: null
+                    }
+                });
+
+                // Set URL
+                setGameIdInUrl(gameIdInput);
+
+                // Close join modal
+                document.getElementById('joinGameModal').classList.add('hidden');
+
+                // Subscribe to game state
+                subscribeToGameState(gameIdInput);
+
+                // Start game immediately
+                const updatedSnapshot = await gameRef.once('value');
+                startOnlineGame(updatedSnapshot.val());
+
+            } catch (error) {
+                console.error('Error joining game:', error);
+                document.getElementById('joinGameError').textContent = 'Failed to join game';
+            }
+        }
+
+        // Subscribe to game state changes
+        function subscribeToGameState(gameId) {
+            const gameRef = database.ref(`${gamePathPrefix}/${gameId}`);
+
+            // Listen for when player O joins
+            gameStateListener = gameRef.on('value', (snapshot) => {
+                const gameData = snapshot.val();
+
+                if (!gameData) {
+                    // Game was deleted
+                    console.log('Game was deleted');
+                    return;
+                }
+
+                // Check if player O joined
+                if (gameData.metadata.status === 'active' && gameData.players.O) {
+                    // Start the game!
+                    document.getElementById('waitingRoomModal').classList.add('hidden');
+                    startOnlineGame(gameData);
+                }
+            });
+        }
+
+        // Start an online game
+        function startOnlineGame(gameData) {
+            // Hide mode selection, show game area
+            document.getElementById('modeSelection').classList.add('hidden');
+            document.getElementById('gameArea').classList.remove('hidden');
+
+            // Show connection status and opponent info
+            document.getElementById('connectionStatus').classList.remove('hidden');
+            document.getElementById('opponentInfo').classList.remove('hidden');
+
+            // Set opponent name
+            const opponentSide = localPlayerSide === 'X' ? 'O' : 'X';
+            document.getElementById('opponentName').textContent = gameData.players[opponentSide].name;
+
+            // Initialize game state from Firebase
+            syncLocalStateFromRemote(gameData.gameState);
+
+            // Initialize the board UI
+            initGame();
+
+            // Set mode
+            gameMode = 'online';
+            gameStartTime = Date.now();
+
+            // Update board state
+            updateBoardState();
+        }
+
+        // Sync local game state from remote Firebase data
+        function syncLocalStateFromRemote(remoteState) {
+            currentPlayer = remoteState.currentPlayer;
+            activeBoard = remoteState.activeBoard;
+            macroState = remoteState.macroState;
+            microBoards = remoteState.microBoards;
+            gameOver = remoteState.gameOver;
+            turnCount = remoteState.turnCount;
+        }
+
+        // Unsubscribe from game state
+        function unsubscribeFromGame() {
+            if (gameStateListener && currentGameId) {
+                database.ref(`${gamePathPrefix}/${currentGameId}`).off('value', gameStateListener);
+                gameStateListener = null;
+            }
+        }
 
         // Rainbow gradients for background
         const rainbowGradients = [
@@ -1006,6 +1497,18 @@
             const modal = document.getElementById('nameEntryModal');
             modal.classList.add('hidden');
             modal.style.display = 'none';
+
+            // Clean up online game state
+            if (isOnlineGame) {
+                unsubscribeFromGame();
+                clearGameIdFromUrl();
+                document.getElementById('connectionStatus').classList.add('hidden');
+                document.getElementById('opponentInfo').classList.add('hidden');
+
+                isOnlineGame = false;
+                currentGameId = null;
+                localPlayerSide = null;
+            }
 
             gameMode = null;
             gameStartTime = null; // Reset timer
@@ -1758,18 +2261,32 @@
 
             if (!gameOver) {
                 let playerName = currentPlayer;
-                if (gameMode !== '2player' && currentPlayer === aiPlayer) {
+                if (gameMode === 'online') {
+                    // Online game: show "Your turn" or "Opponent's turn"
+                    playerName = currentPlayer === localPlayerSide ? 'Your' : "Opponent's";
+                    const message = activeBoard === null
+                        ? `${playerName} turn - Play anywhere`
+                        : `${playerName} turn - Play in highlighted board`;
+                    document.getElementById('gameInfo').textContent = message;
+                } else if (gameMode !== '2player' && currentPlayer === aiPlayer) {
                     playerName = 'AI';
+                    const message = activeBoard === null
+                        ? `${playerName}'s turn - Play anywhere`
+                        : `${playerName}'s turn - Play in highlighted board`;
+                    document.getElementById('gameInfo').textContent = message;
                 } else if (gameMode !== '2player') {
                     playerName = 'You';
+                    const message = activeBoard === null
+                        ? `${playerName}r turn - Play anywhere`
+                        : `${playerName}r turn - Play in highlighted board`;
+                    document.getElementById('gameInfo').textContent = message;
                 } else {
                     playerName = `Player ${currentPlayer}`;
+                    const message = activeBoard === null
+                        ? `${playerName}'s turn - Play anywhere`
+                        : `${playerName}'s turn - Play in highlighted board`;
+                    document.getElementById('gameInfo').textContent = message;
                 }
-
-                const message = activeBoard === null
-                    ? `${playerName}'s turn - Play anywhere`
-                    : `${playerName}'s turn - Play in highlighted board`;
-                document.getElementById('gameInfo').textContent = message;
             }
         }
 
