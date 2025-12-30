@@ -4,6 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tic-Tac-Go Insane - Ultimate Strategy Game</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" id="metaDescription" content="The ultimate strategy game! 3x3 grid of Tic-Tac-Toe boards - every move determines your opponent's next battleground. Can you handle the insanity?">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" id="ogUrl" content="https://lukemanimala.github.io/super-tic-tac-toe/">
+    <meta property="og:title" id="ogTitle" content="Tic-Tac-Go Insane - Ultimate Strategy Game">
+    <meta property="og:description" id="ogDescription" content="The ultimate strategy game! 3x3 grid of Tic-Tac-Toe boards - every move determines your opponent's next battleground. Can you handle the insanity?">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" id="twitterUrl" content="https://lukemanimala.github.io/super-tic-tac-toe/">
+    <meta property="twitter:title" id="twitterTitle" content="Tic-Tac-Go Insane - Ultimate Strategy Game">
+    <meta property="twitter:description" id="twitterDescription" content="The ultimate strategy game! 3x3 grid of Tic-Tac-Toe boards - every move determines your opponent's next battleground. Can you handle the insanity?">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
@@ -649,6 +665,80 @@
             text-align: left;
         }
 
+        .player-info {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 100;
+            font-family: 'Space Grotesk', sans-serif;
+            text-align: left;
+        }
+
+        .rematch-request {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 150;
+            font-family: 'Space Grotesk', sans-serif;
+            text-align: center;
+        }
+
+        .rematch-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .rematch-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        }
+
+        .rematch-button:disabled {
+            background: #999;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .name-edit-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .name-edit-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 400px;
+            width: 100%;
+        }
+
         /* Mobile Responsive Styles */
         @media screen and (max-width: 768px) {
             body {
@@ -905,6 +995,7 @@
                 <div class="leaderboard-tabs">
                     <button class="tab-button active" onclick="switchLeaderboardTab('games')">Top Games</button>
                     <button class="tab-button" onclick="switchLeaderboardTab('players')">Players</button>
+                    <button class="tab-button" onclick="switchLeaderboardTab('online')">🌐 Online</button>
                 </div>
 
                 <!-- Top Games Tab -->
@@ -921,6 +1012,11 @@
                 <!-- Players Tab -->
                 <div id="playersTab" class="tab-content hidden">
                     <div id="playersTable"></div>
+                </div>
+
+                <!-- Online Tab -->
+                <div id="onlineTab" class="tab-content hidden">
+                    <div id="onlineTable"></div>
                 </div>
             </div>
         </div>
@@ -983,6 +1079,41 @@
         <div id="opponentInfo" class="opponent-info hidden">
             <div style="font-weight: bold; margin-bottom: 5px;">Opponent</div>
             <div id="opponentName" style="font-size: 18px;">-</div>
+        </div>
+
+        <!-- Player Info Display (shown during online games) -->
+        <div id="playerInfo" class="player-info hidden">
+            <div style="font-weight: bold; margin-bottom: 5px;">You</div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div id="playerName" style="font-size: 18px;">-</div>
+                <button id="editNameBtn" onclick="showNameEditModal()" style="background: none; border: none; cursor: pointer; font-size: 16px; padding: 2px 5px;" title="Edit name">✏️</button>
+            </div>
+        </div>
+
+        <!-- Rematch Request Display (shown when game ends) -->
+        <div id="rematchRequest" class="rematch-request hidden">
+            <div style="font-weight: bold; margin-bottom: 10px;">🔄 Game Over</div>
+            <button id="rematchBtn" onclick="requestRematch()" class="rematch-button">Request Rematch</button>
+            <div id="rematchStatus" style="margin-top: 10px; font-size: 14px; color: #666;"></div>
+        </div>
+
+        <!-- Name Edit Modal -->
+        <div id="nameEditModal" class="name-edit-modal hidden">
+            <div class="name-edit-content">
+                <h3>Edit Your Name</h3>
+                <div class="name-input-container">
+                    <input type="text" maxlength="1" class="name-input" id="editChar1" oninput="handleEditNameInput(0)">
+                    <input type="text" maxlength="1" class="name-input" id="editChar2" oninput="handleEditNameInput(1)">
+                    <input type="text" maxlength="1" class="name-input" id="editChar3" oninput="handleEditNameInput(2)">
+                    <input type="text" maxlength="1" class="name-input" id="editChar4" oninput="handleEditNameInput(3)">
+                    <input type="text" maxlength="1" class="name-input" id="editChar5" oninput="handleEditNameInput(4)">
+                </div>
+                <div class="error-message" id="editNameError"></div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button onclick="saveNameEdit()" class="submit-score-btn">Save</button>
+                    <button onclick="closeNameEditModal()" class="submit-score-btn" style="background: #999;">Cancel</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1228,6 +1359,10 @@
                 console.log('Attempting to join game:', gameIdInput);
                 console.log('Game data:', gameData);
 
+                // Update SEO meta tags for challenge
+                const challengerName = gameData.players?.X?.name || null;
+                updateMetaTagsForChallenge(gameIdInput, challengerName);
+
                 // Validate game state
                 if (gameData.metadata.status !== 'waiting') {
                     console.log('Game status is not waiting:', gameData.metadata.status);
@@ -1329,15 +1464,36 @@
                     // Check if game ended
                     if (gameData.gameState.gameOver) {
                         const macroWinner = checkWinner(macroState);
+                        const playerXName = gameData.players.X.name;
+                        const playerOName = gameData.players.O.name;
+
                         if (macroWinner) {
                             gameOver = true;
                             const winnerText = macroWinner === localPlayerSide ? 'You win!' : 'Opponent wins!';
                             document.getElementById('gameInfo').textContent = winnerText;
                             playSound(macroWinner === localPlayerSide ? 'win' : 'lose');
+
+                            // Update online leaderboard
+                            const winnerName = macroWinner === 'X' ? playerXName : playerOName;
+                            const loserName = macroWinner === 'X' ? playerOName : playerXName;
+                            updateOnlineLeaderboard(winnerName, 'win');
+                            updateOnlineLeaderboard(loserName, 'loss');
                         } else {
                             gameOver = true;
                             document.getElementById('gameInfo').textContent = "Game is a draw!";
+
+                            // Update online leaderboard for draw
+                            updateOnlineLeaderboard(playerXName, 'draw');
+                            updateOnlineLeaderboard(playerOName, 'draw');
                         }
+
+                        // Show rematch UI
+                        document.getElementById('rematchRequest').classList.remove('hidden');
+                        document.getElementById('rematchStatus').textContent = '';
+                        document.getElementById('rematchBtn').disabled = false;
+
+                        // Start listening for rematch requests
+                        listenForRematch(currentGameId);
                     }
                 }
             });
@@ -1356,6 +1512,10 @@
             // Show connection status and opponent info
             document.getElementById('connectionStatus').classList.remove('hidden');
             document.getElementById('opponentInfo').classList.remove('hidden');
+
+            // Show player info UI
+            document.getElementById('playerInfo').classList.remove('hidden');
+            document.getElementById('playerName').textContent = gameData.players[localPlayerSide].name;
 
             // Set opponent name
             const opponentSide = localPlayerSide === 'X' ? 'O' : 'X';
@@ -2811,15 +2971,21 @@
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
 
-            // Show/hide tab content
+            // Hide all tabs
+            document.getElementById('gamesTab').classList.add('hidden');
+            document.getElementById('playersTab').classList.add('hidden');
+            document.getElementById('onlineTab').classList.add('hidden');
+
+            // Show selected tab and load data
             if (tab === 'games') {
                 document.getElementById('gamesTab').classList.remove('hidden');
-                document.getElementById('playersTab').classList.add('hidden');
                 loadGamesLeaderboard();
-            } else {
-                document.getElementById('gamesTab').classList.add('hidden');
+            } else if (tab === 'players') {
                 document.getElementById('playersTab').classList.remove('hidden');
                 loadPlayersLeaderboard();
+            } else if (tab === 'online') {
+                document.getElementById('onlineTab').classList.remove('hidden');
+                loadOnlineLeaderboard();
             }
         }
 
@@ -2921,6 +3087,116 @@
                     container.innerHTML = html;
                 }
             });
+        }
+
+        // Update online leaderboard with win/loss/draw
+        async function updateOnlineLeaderboard(playerName, result) {
+            if (!playerName) return;
+
+            const leaderboardPath = isDevelopment ? 'onlineLeaderboard-dev' : 'onlineLeaderboard';
+            const playerRef = database.ref(`${leaderboardPath}/${playerName}`);
+
+            try {
+                // Use transaction to safely increment counters
+                await playerRef.transaction((current) => {
+                    if (!current) {
+                        // First time player - initialize
+                        current = { wins: 0, losses: 0, draws: 0 };
+                    }
+
+                    // Increment appropriate counter
+                    if (result === 'win') current.wins++;
+                    else if (result === 'loss') current.losses++;
+                    else if (result === 'draw') current.draws++;
+
+                    current.lastUpdated = Date.now();
+                    return current;
+                });
+            } catch (error) {
+                console.error('Error updating online leaderboard:', error);
+            }
+        }
+
+        // Load and display online leaderboard
+        function loadOnlineLeaderboard() {
+            const container = document.getElementById('onlineTable');
+            container.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">Loading...</p>';
+
+            const leaderboardPath = isDevelopment ? 'onlineLeaderboard-dev' : 'onlineLeaderboard';
+
+            database.ref(leaderboardPath)
+                .once('value')
+                .then((snapshot) => {
+                    const players = [];
+
+                    snapshot.forEach((childSnapshot) => {
+                        const playerData = childSnapshot.val();
+                        players.push({
+                            name: childSnapshot.key,
+                            wins: playerData.wins || 0,
+                            losses: playerData.losses || 0,
+                            draws: playerData.draws || 0
+                        });
+                    });
+
+                    // Sort by wins (descending), then by win rate
+                    players.sort((a, b) => {
+                        if (b.wins !== a.wins) return b.wins - a.wins;
+                        // Tiebreaker: better win rate
+                        const aTotal = a.wins + a.losses + a.draws;
+                        const bTotal = b.wins + b.losses + b.draws;
+                        const aRate = aTotal > 0 ? a.wins / aTotal : 0;
+                        const bRate = bTotal > 0 ? b.wins / bTotal : 0;
+                        return bRate - aRate;
+                    });
+
+                    if (players.length === 0) {
+                        container.innerHTML = '<p style="text-align: center; padding: 40px;">No online games played yet!</p>';
+                        return;
+                    }
+
+                    // Generate table
+                    let html = `
+                        <table class="leaderboard-table">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Player</th>
+                                    <th>Record</th>
+                                    <th>Games</th>
+                                    <th>Win Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    players.forEach((player, index) => {
+                        const medals = ['🥇', '🥈', '🥉'];
+                        const medal = index < 3 ? `<span class="rank-medal">${medals[index]}</span>` : '';
+                        const rank = medal || `${index + 1}.`;
+
+                        const totalGames = player.wins + player.losses + player.draws;
+                        const winRate = totalGames > 0 ? ((player.wins / totalGames) * 100).toFixed(1) : '0.0';
+                        const record = `${player.wins}-${player.losses}-${player.draws}`;
+
+                        html += `
+                            <tr>
+                                <td>${rank}</td>
+                                <td><strong>${player.name}</strong></td>
+                                <td>${record}</td>
+                                <td>${totalGames}</td>
+                                <td>${winRate}%</td>
+                            </tr>
+                        `;
+                    });
+
+                    html += '</tbody></table>';
+                    container.innerHTML = html;
+                })
+                .catch((error) => {
+                    console.error('Error loading online leaderboard:', error);
+                    container.innerHTML = '<p style="text-align: center; color: red;">Error loading leaderboard</p>';
+                });
         }
 
         function closeLeaderboard() {
@@ -3067,11 +3343,266 @@
             }, 100);
         }
 
+        // ===== SEO META TAG UPDATES =====
+
+        function updateMetaTagsForChallenge(gameId, challengerName) {
+            const baseUrl = 'https://lukemanimala.github.io/super-tic-tac-toe/';
+            const gameUrl = `${baseUrl}#${gameId}`;
+
+            // Construct challenge message
+            const title = challengerName
+                ? `${challengerName} challenged you to Tic-Tac-Go Insane!`
+                : `You've been challenged to Tic-Tac-Go Insane!`;
+
+            const description = challengerName
+                ? `${challengerName} is waiting for you! Accept the challenge and prove your strategy skills in this mind-bending 3x3 grid of Tic-Tac-Toe boards!`
+                : `Accept the challenge and prove your strategy skills! Can you handle the ultimate Tic-Tac-Toe showdown?`;
+
+            // Update page title
+            document.title = title;
+
+            // Update meta description
+            const metaDesc = document.getElementById('metaDescription');
+            if (metaDesc) metaDesc.setAttribute('content', description);
+
+            // Update Open Graph tags
+            const ogUrl = document.getElementById('ogUrl');
+            const ogTitle = document.getElementById('ogTitle');
+            const ogDesc = document.getElementById('ogDescription');
+            if (ogUrl) ogUrl.setAttribute('content', gameUrl);
+            if (ogTitle) ogTitle.setAttribute('content', title);
+            if (ogDesc) ogDesc.setAttribute('content', description);
+
+            // Update Twitter tags
+            const twitterUrl = document.getElementById('twitterUrl');
+            const twitterTitle = document.getElementById('twitterTitle');
+            const twitterDesc = document.getElementById('twitterDescription');
+            if (twitterUrl) twitterUrl.setAttribute('content', gameUrl);
+            if (twitterTitle) twitterTitle.setAttribute('content', title);
+            if (twitterDesc) twitterDesc.setAttribute('content', description);
+        }
+
+        // ===== NAME EDITING FUNCTIONS =====
+
+        function showNameEditModal() {
+            // Get current player name
+            const currentName = gameData?.players?.[localPlayerSide]?.name || '';
+
+            // Populate modal with current name
+            for (let i = 0; i < 5; i++) {
+                document.getElementById(`editChar${i + 1}`).value = currentName[i] || '';
+            }
+
+            // Clear error
+            document.getElementById('editNameError').textContent = '';
+
+            // Show modal
+            document.getElementById('nameEditModal').classList.remove('hidden');
+
+            // Focus first input
+            setTimeout(() => {
+                document.getElementById('editChar1').focus();
+            }, 100);
+        }
+
+        function handleEditNameInput(index) {
+            const input = document.getElementById(`editChar${index + 1}`);
+            const value = input.value;
+
+            // Allow letters and numbers
+            if (value && !/^[a-zA-Z0-9]$/.test(value)) {
+                input.value = '';
+                return;
+            }
+
+            // Auto-focus next input
+            if (value && index < 4) {
+                document.getElementById(`editChar${index + 2}`).focus();
+            }
+
+            // Clear error when user types
+            document.getElementById('editNameError').textContent = '';
+        }
+
+        async function saveNameEdit() {
+            // Get name from inputs
+            const char1 = document.getElementById('editChar1').value;
+            const char2 = document.getElementById('editChar2').value;
+            const char3 = document.getElementById('editChar3').value;
+            const char4 = document.getElementById('editChar4').value;
+            const char5 = document.getElementById('editChar5').value;
+
+            const newName = (char1 + char2 + char3 + char4 + char5).toUpperCase();
+
+            // Validate name
+            if (newName.length !== 5) {
+                document.getElementById('editNameError').textContent = 'Please enter 5 letters';
+                return;
+            }
+
+            if (containsBadWord(newName)) {
+                document.getElementById('editNameError').textContent = 'Please choose a different name';
+                return;
+            }
+
+            // Update in Firebase
+            const gameId = currentGameId;
+            const playerPath = `${gamesPath}/${gameId}/players/${localPlayerSide}`;
+
+            try {
+                await database.ref(playerPath).update({ name: newName });
+
+                // Update in localStorage
+                localStorage.setItem('playerName', newName);
+
+                // Update display
+                document.getElementById('playerName').textContent = newName;
+
+                // Close modal
+                closeNameEditModal();
+            } catch (error) {
+                console.error('Error updating name:', error);
+                document.getElementById('editNameError').textContent = 'Error updating name';
+            }
+        }
+
+        function closeNameEditModal() {
+            document.getElementById('nameEditModal').classList.add('hidden');
+        }
+
+        // ===== REMATCH FUNCTIONS =====
+
+        async function requestRematch() {
+            if (!currentGameId) return;
+
+            const rematchPath = `${gamesPath}/${currentGameId}/rematchRequest`;
+
+            try {
+                // Set rematch request for this player
+                await database.ref(`${rematchPath}/${localPlayerSide}`).set(true);
+
+                // Update UI
+                document.getElementById('rematchStatus').textContent = 'Waiting for opponent...';
+                document.getElementById('rematchBtn').disabled = true;
+
+            } catch (error) {
+                console.error('Error requesting rematch:', error);
+                document.getElementById('rematchStatus').textContent = 'Error requesting rematch';
+            }
+        }
+
+        function listenForRematch(gameId) {
+            const rematchPath = `${gamesPath}/${gameId}/rematchRequest`;
+
+            database.ref(rematchPath).on('value', (snapshot) => {
+                const requests = snapshot.val();
+                if (!requests) return;
+
+                const xRequested = requests.X === true;
+                const oRequested = requests.O === true;
+
+                // If both players requested rematch, start new game
+                if (xRequested && oRequested) {
+                    startRematch(gameId);
+                } else if (requests[localPlayerSide] === true) {
+                    // Current player requested, waiting for opponent
+                    document.getElementById('rematchStatus').textContent = 'Waiting for opponent...';
+                } else {
+                    // Opponent requested
+                    const opponentSide = localPlayerSide === 'X' ? 'O' : 'X';
+                    if (requests[opponentSide] === true) {
+                        document.getElementById('rematchStatus').textContent = 'Opponent wants a rematch!';
+                    }
+                }
+            });
+        }
+
+        async function startRematch(oldGameId) {
+            try {
+                // Hide rematch UI
+                document.getElementById('rematchRequest').classList.add('hidden');
+
+                // Get old game data to copy player info
+                const oldGameSnapshot = await database.ref(`${gamesPath}/${oldGameId}`).once('value');
+                const oldGameData = oldGameSnapshot.val();
+
+                if (!oldGameData) return;
+
+                // Create new game ID
+                const newGameId = generateGameId();
+
+                // Swap player sides (X becomes O, O becomes X)
+                const newLocalSide = localPlayerSide === 'X' ? 'O' : 'X';
+                const newOpponentSide = localPlayerSide === 'X' ? 'X' : 'O';
+
+                // Create new game with swapped sides
+                const newGameData = {
+                    players: {
+                        [newLocalSide]: {
+                            name: oldGameData.players[localPlayerSide].name,
+                            connected: true
+                        },
+                        [newOpponentSide]: {
+                            name: oldGameData.players[localPlayerSide === 'X' ? 'O' : 'X'].name,
+                            connected: true
+                        }
+                    },
+                    gameState: {
+                        currentPlayer: 'X',
+                        activeBoard: null,
+                        macroState: Array(9).fill(null),
+                        microBoards: Array(9).fill(null).map(() => Array(9).fill(null)),
+                        gameOver: false,
+                        createdAt: Date.now()
+                    }
+                };
+
+                // Create new game in Firebase
+                await database.ref(`${gamesPath}/${newGameId}`).set(newGameData);
+
+                // Update current game ID and player side
+                currentGameId = newGameId;
+                localPlayerSide = newLocalSide;
+
+                // Stop listening to old game
+                database.ref(`${gamesPath}/${oldGameId}`).off();
+
+                // Update URL
+                window.location.hash = newGameId;
+
+                // Start listening to new game
+                listenToGameUpdates(newGameId);
+
+                // Reset local game state
+                gameOver = false;
+                currentPlayer = 'X';
+                activeBoard = null;
+                macroState = Array(9).fill(null);
+                microBoards = Array(9).fill(null).map(() => Array(9).fill(null));
+
+                // Reinitialize game UI
+                initGame();
+                updateBoardState();
+
+                // Update opponent name display
+                const opponentName = newGameData.players[newOpponentSide].name;
+                document.getElementById('opponentName').textContent = opponentName;
+
+                // Update player name display
+                document.getElementById('playerName').textContent = newGameData.players[newLocalSide].name;
+
+            } catch (error) {
+                console.error('Error starting rematch:', error);
+                document.getElementById('rematchStatus').textContent = 'Error starting rematch';
+            }
+        }
+
         // Initialize home leaderboard on page load
         window.addEventListener('DOMContentLoaded', () => {
             // CRITICAL: Ensure modal is absolutely hidden on page load
             const nameModal = document.getElementById('nameEntryModal');
             const leaderboardModal = document.getElementById('leaderboardModal');
+            const nameEditModal = document.getElementById('nameEditModal');
 
             if (nameModal) {
                 nameModal.classList.add('hidden');
@@ -3079,6 +3610,9 @@
             }
             if (leaderboardModal) {
                 leaderboardModal.classList.add('hidden');
+            }
+            if (nameEditModal) {
+                nameEditModal.classList.add('hidden');
             }
 
             // Reset all game state variables to ensure clean start
