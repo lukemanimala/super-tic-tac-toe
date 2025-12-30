@@ -1407,7 +1407,8 @@
         // Sync local game state from remote Firebase data
         function syncLocalStateFromRemote(remoteState) {
             currentPlayer = remoteState.currentPlayer;
-            activeBoard = remoteState.activeBoard;
+            // Firebase returns undefined for null values, so explicitly convert
+            activeBoard = remoteState.activeBoard === undefined ? null : remoteState.activeBoard;
 
             // Convert Firebase objects back to arrays (Firebase converts arrays to objects)
             // Ensure we always have proper arrays with 9 elements
