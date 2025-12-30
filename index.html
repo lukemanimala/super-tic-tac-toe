@@ -1294,6 +1294,7 @@
         let localPlayerSide = null; // 'X' or 'O'
         let gameStateListener = null;
         let gameData = null; // Current online game data from Firebase
+        let leaderboardUpdated = false; // Track if we've updated leaderboard for current game
         let presenceRef = null;
         let heartbeatInterval = null;
         let disconnectTimer = null;
@@ -1612,18 +1613,24 @@
                             document.getElementById('gameInfo').textContent = winnerText;
                             playSound(macroWinner === localPlayerSide ? 'win' : 'lose');
 
-                            // Update online leaderboard
-                            const winnerName = macroWinner === 'X' ? playerXName : playerOName;
-                            const loserName = macroWinner === 'X' ? playerOName : playerXName;
-                            updateOnlineLeaderboard(winnerName, 'win');
-                            updateOnlineLeaderboard(loserName, 'loss');
+                            // Update online leaderboard ONCE per game
+                            if (!leaderboardUpdated) {
+                                const winnerName = macroWinner === 'X' ? playerXName : playerOName;
+                                const loserName = macroWinner === 'X' ? playerOName : playerXName;
+                                updateOnlineLeaderboard(winnerName, 'win');
+                                updateOnlineLeaderboard(loserName, 'loss');
+                                leaderboardUpdated = true;
+                            }
                         } else {
                             gameOver = true;
                             document.getElementById('gameInfo').textContent = "Game is a draw!";
 
-                            // Update online leaderboard for draw
-                            updateOnlineLeaderboard(playerXName, 'draw');
-                            updateOnlineLeaderboard(playerOName, 'draw');
+                            // Update online leaderboard for draw ONCE per game
+                            if (!leaderboardUpdated) {
+                                updateOnlineLeaderboard(playerXName, 'draw');
+                                updateOnlineLeaderboard(playerOName, 'draw');
+                                leaderboardUpdated = true;
+                            }
                         }
 
                         // Show rematch UI
@@ -1643,6 +1650,7 @@
             // Set mode FIRST before any other initialization
             gameMode = 'online';
             gameStartTime = Date.now();
+            leaderboardUpdated = false; // Reset for new game
 
             // Hide mode selection, show game area
             document.getElementById('modeSelection').classList.add('hidden');
@@ -3911,6 +3919,7 @@ ${logText}
                 // Update current game ID and player side
                 currentGameId = newGameId;
                 localPlayerSide = newLocalSide;
+                leaderboardUpdated = false; // Reset for new game
 
                 // Stop listening to old game
                 database.ref(`${gamePathPrefix}/${oldGameId}`).off();
