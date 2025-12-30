@@ -668,7 +668,7 @@
         .player-info {
             position: fixed;
             top: 20px;
-            left: 220px;
+            left: 185px;
             background: white;
             padding: 15px 20px;
             border-radius: 15px;
@@ -3785,7 +3785,7 @@ ${logText}
 
             // Update in Firebase
             const gameId = currentGameId;
-            const playerPath = `${gamesPath}/${gameId}/players/${localPlayerSide}`;
+            const playerPath = `${gamePathPrefix}/${gameId}/players/${localPlayerSide}`;
 
             try {
                 await database.ref(playerPath).update({ name: newName });
@@ -3813,7 +3813,7 @@ ${logText}
         async function requestRematch() {
             if (!currentGameId) return;
 
-            const rematchPath = `${gamesPath}/${currentGameId}/rematchRequest`;
+            const rematchPath = `${gamePathPrefix}/${currentGameId}/rematchRequest`;
 
             try {
                 // Set rematch request for this player
@@ -3830,7 +3830,7 @@ ${logText}
         }
 
         function listenForRematch(gameId) {
-            const rematchPath = `${gamesPath}/${gameId}/rematchRequest`;
+            const rematchPath = `${gamePathPrefix}/${gameId}/rematchRequest`;
 
             database.ref(rematchPath).on('value', (snapshot) => {
                 const requests = snapshot.val();
@@ -3861,7 +3861,7 @@ ${logText}
                 document.getElementById('rematchRequest').classList.add('hidden');
 
                 // Get old game data to copy player info
-                const oldGameSnapshot = await database.ref(`${gamesPath}/${oldGameId}`).once('value');
+                const oldGameSnapshot = await database.ref(`${gamePathPrefix}/${oldGameId}`).once('value');
                 const oldGameData = oldGameSnapshot.val();
 
                 if (!oldGameData) return;
@@ -3896,14 +3896,14 @@ ${logText}
                 };
 
                 // Create new game in Firebase
-                await database.ref(`${gamesPath}/${newGameId}`).set(newGameData);
+                await database.ref(`${gamePathPrefix}/${newGameId}`).set(newGameData);
 
                 // Update current game ID and player side
                 currentGameId = newGameId;
                 localPlayerSide = newLocalSide;
 
                 // Stop listening to old game
-                database.ref(`${gamesPath}/${oldGameId}`).off();
+                database.ref(`${gamePathPrefix}/${oldGameId}`).off();
 
                 // Update URL
                 window.location.hash = newGameId;
