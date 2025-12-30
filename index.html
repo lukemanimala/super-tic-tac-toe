@@ -1130,8 +1130,11 @@
             if (currentGameId) {
                 // Delete the game from Firebase
                 await database.ref(`${gamePathPrefix}/${currentGameId}`).remove();
+                unsubscribeFromGame();
                 currentGameId = null;
                 clearGameIdFromUrl();
+                isOnlineGame = false;
+                localPlayerSide = null;
             }
 
             document.getElementById('waitingRoomModal').classList.add('hidden');
@@ -1222,14 +1225,19 @@
                 }
 
                 const gameData = snapshot.val();
+                console.log('Attempting to join game:', gameIdInput);
+                console.log('Game data:', gameData);
 
                 // Validate game state
                 if (gameData.metadata.status !== 'waiting') {
+                    console.log('Game status is not waiting:', gameData.metadata.status);
                     document.getElementById('joinGameError').textContent = 'Game already in progress';
                     return;
                 }
 
-                if (gameData.players.O !== null) {
+                // Check if player O spot is taken (handles both null and undefined)
+                if (gameData.players.O) {
+                    console.log('Player O is already set:', gameData.players.O);
                     document.getElementById('joinGameError').textContent = 'Game is full';
                     return;
                 }
