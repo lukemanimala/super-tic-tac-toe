@@ -1373,15 +1373,30 @@
             activeBoard = remoteState.activeBoard;
 
             // Convert Firebase objects back to arrays (Firebase converts arrays to objects)
-            macroState = Array.isArray(remoteState.macroState)
-                ? remoteState.macroState
-                : Object.values(remoteState.macroState || {});
+            // Ensure we always have proper arrays with 9 elements
+            if (remoteState.macroState) {
+                macroState = Array.isArray(remoteState.macroState)
+                    ? [...remoteState.macroState]
+                    : Array.from({ length: 9 }, (_, i) => remoteState.macroState[i] || null);
+            } else {
+                macroState = Array(9).fill(null);
+            }
 
-            microBoards = Array.isArray(remoteState.microBoards)
-                ? remoteState.microBoards
-                : Object.values(remoteState.microBoards || {}).map(board =>
-                    Array.isArray(board) ? board : Object.values(board || {})
-                  );
+            if (remoteState.microBoards) {
+                microBoards = Array.from({ length: 9 }, (_, i) => {
+                    const board = remoteState.microBoards[i];
+                    if (board) {
+                        return Array.isArray(board)
+                            ? [...board]
+                            : Array.from({ length: 9 }, (_, j) => board[j] || null);
+                    }
+                    return Array(9).fill(null);
+                });
+            } else {
+                microBoards = Array(9).fill(null).map(() => Array(9).fill(null));
+            }
+
+            console.log('Synced state:', { macroState, microBoards, currentPlayer, activeBoard });
 
             gameOver = remoteState.gameOver;
             turnCount = remoteState.turnCount;
@@ -1631,6 +1646,12 @@
         }
 
         function makeMove(macroIndex, microIndex, isAI) {
+            // Safety check: ensure arrays are initialized
+            if (!microBoards[macroIndex]) {
+                console.error('microBoards not initialized for index:', macroIndex);
+                return false;
+            }
+
             if (macroState[macroIndex] !== null) return false;
             if (microBoards[macroIndex][microIndex] !== null) return false;
             if (activeBoard !== null && activeBoard !== macroIndex) return false;
