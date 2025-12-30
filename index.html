@@ -843,7 +843,7 @@
                 <button class="mode-button" onclick="startGame('2player')">2 Players</button>
                 <button class="mode-button" onclick="startGame('ai-easy')">vs AI (Easy)</button>
                 <button class="mode-button" onclick="startGame('ai-hard')">vs AI (Hard)</button>
-                <button class="mode-button" onclick="startGame('ai-extreme')">vs AI (EXTREME)</button>
+                <button class="mode-button" onclick="startGame('ai-extreme')">vs AI (INSANE)</button>
                 <button class="mode-button" onclick="showOnlineMenu()">🌐 Play Online</button>
                 <button class="mode-button" onclick="showLeaderboard()">🏆 Leaderboard</button>
             </div>
@@ -913,7 +913,7 @@
                         <button class="filter-button active" onclick="filterGames('all')">All</button>
                         <button class="filter-button" onclick="filterGames('ai-easy')">Easy</button>
                         <button class="filter-button" onclick="filterGames('ai-hard')">Hard</button>
-                        <button class="filter-button" onclick="filterGames('ai-extreme')">EXTREME</button>
+                        <button class="filter-button" onclick="filterGames('ai-extreme')">INSANE</button>
                     </div>
                     <div id="gamesTable"></div>
                 </div>
@@ -1442,17 +1442,22 @@
 
         // Make a move in an online game
         async function makeOnlineMove(macroIndex, microIndex) {
+            console.log('Attempting move:', { macroIndex, microIndex, currentPlayer, activeBoard,
+                cellValue: microBoards[macroIndex][microIndex],
+                boardState: macroState[macroIndex] });
+
             // Validate move locally first
-            if (macroState[macroIndex] !== null) {
-                console.log('Board already won');
+            // Use truthy checks since Firebase stores null as undefined
+            if (macroState[macroIndex]) {
+                console.log('Board already won:', macroIndex, macroState[macroIndex]);
                 return;
             }
-            if (microBoards[macroIndex][microIndex] !== null) {
-                console.log('Cell already filled');
+            if (microBoards[macroIndex][microIndex]) {
+                console.log('Cell already filled:', { macroIndex, microIndex, value: microBoards[macroIndex][microIndex] });
                 return;
             }
             if (activeBoard !== null && activeBoard !== macroIndex) {
-                console.log('Wrong board');
+                console.log('Wrong board - must play on board', activeBoard, 'but tried', macroIndex);
                 return;
             }
 
@@ -1476,46 +1481,60 @@
                         return; // Abort - not our turn
                     }
 
-                    // Convert Firebase state to proper arrays - Firebase converts arrays to objects
+                    // Firebase returns undefined for null values - normalize activeBoard
+                    const currentActiveBoard = currentState.activeBoard === undefined ? null : currentState.activeBoard;
+
+                    // Convert macroState - use Array.from to handle sparse arrays properly
                     let stateMacroState;
-                    if (Array.isArray(currentState.macroState)) {
-                        stateMacroState = [...currentState.macroState];
-                    } else if (currentState.macroState && typeof currentState.macroState === 'object') {
-                        stateMacroState = Object.keys(currentState.macroState).sort().map(k => currentState.macroState[k]);
-                        // Ensure length 9
-                        while (stateMacroState.length < 9) stateMacroState.push(null);
+                    if (currentState.macroState) {
+                        // Process all indices 0-8 to avoid sparse array issues
+                        stateMacroState = Array.from({ length: 9 }, (_, i) => {
+                            const value = currentState.macroState[i];
+                            // Convert undefined to null - Firebase rejects undefined
+                            return value === undefined ? null : value;
+                        });
                     } else {
                         stateMacroState = Array(9).fill(null);
                     }
 
+                    // Convert microBoards - use Array.from to handle sparse arrays properly
                     let stateMicroBoards;
-                    if (Array.isArray(currentState.microBoards)) {
-                        stateMicroBoards = currentState.microBoards.map(board =>
-                            Array.isArray(board) ? [...board] : Array(9).fill(null)
-                        );
-                    } else if (currentState.microBoards && typeof currentState.microBoards === 'object') {
-                        stateMicroBoards = Object.keys(currentState.microBoards).sort().map(k => {
-                            const board = currentState.microBoards[k];
-                            if (Array.isArray(board)) {
-                                return [...board];
-                            } else if (board && typeof board === 'object') {
-                                const arr = Object.keys(board).sort().map(j => board[j]);
-                                while (arr.length < 9) arr.push(null);
-                                return arr;
+                    if (currentState.microBoards) {
+                        // Process all indices 0-8, not just defined ones (map() skips undefined)
+                        stateMicroBoards = Array.from({ length: 9 }, (_, i) => {
+                            const board = currentState.microBoards[i];
+                            if (!board) {
+                                return Array(9).fill(null);
                             }
-                            return Array(9).fill(null);
+                            // Board exists - convert to array and ensure NO undefined values (Firebase rejects them)
+                            return Array.from({ length: 9 }, (_, j) => {
+                                const cell = board[j];
+                                // Convert undefined to null - Firebase rejects undefined
+                                return cell === undefined ? null : cell;
+                            });
                         });
-                        // Ensure length 9
-                        while (stateMicroBoards.length < 9) stateMicroBoards.push(Array(9).fill(null));
                     } else {
                         stateMicroBoards = Array(9).fill(null).map(() => Array(9).fill(null));
                     }
 
                     console.log('Converted arrays:', { stateMacroState, stateMicroBoards });
 
-                    if (stateMacroState[macroIndex] !== null) return; // Board won
-                    if (stateMicroBoards[macroIndex][microIndex] !== null) return; // Cell filled
-                    if (currentState.activeBoard !== null && currentState.activeBoard !== macroIndex) return; // Wrong board
+                    // Validate move with logging
+                    // Use truthy checks since Firebase stores null as undefined
+                    if (stateMacroState[macroIndex]) {
+                        console.log('Transaction aborted: board already won', macroIndex, stateMacroState[macroIndex]);
+                        return;
+                    }
+                    if (stateMicroBoards[macroIndex][microIndex]) {
+                        console.log('Transaction aborted: cell already filled', macroIndex, microIndex, stateMicroBoards[macroIndex][microIndex]);
+                        return;
+                    }
+                    if (currentActiveBoard !== null && currentActiveBoard !== macroIndex) {
+                        console.log('Transaction aborted: wrong board', { currentActiveBoard, attemptedBoard: macroIndex });
+                        return;
+                    }
+
+                    console.log('All validations passed, applying move...');
 
                     // Make the move
                     stateMicroBoards[macroIndex][microIndex] = localPlayerSide;
@@ -1524,18 +1543,20 @@
                     const microWinner = checkWinner(stateMicroBoards[macroIndex]);
                     if (microWinner) {
                         stateMacroState[macroIndex] = microWinner;
-                    } else if (stateMicroBoards[macroIndex].every(cell => cell !== null)) {
+                    } else if (stateMicroBoards[macroIndex].every(cell => cell)) {
+                        // Board is full (all cells are truthy - 'X' or 'O')
                         stateMacroState[macroIndex] = 'draw';
                     }
 
                     // Check if game is won
                     const macroWinner = checkWinner(stateMacroState);
-                    const isGameOver = macroWinner !== null || stateMacroState.every(state => state !== null);
+                    const isGameOver = macroWinner || stateMacroState.every(state => state);
 
                     // Determine next active board
                     let nextActiveBoard = null;
                     if (!isGameOver) {
-                        if (stateMacroState[microIndex] === null) {
+                        if (!stateMacroState[microIndex]) {
+                            // Board is not won/drawn, so play there
                             nextActiveBoard = microIndex;
                         } else {
                             nextActiveBoard = null; // Can play anywhere
@@ -1560,6 +1581,12 @@
                         macroIndex,
                         microIndex,
                         timestamp: Date.now()
+                    });
+
+                    console.log('Transaction returning updated state:', {
+                        currentPlayer: nextPlayer,
+                        activeBoard: nextActiveBoard,
+                        turnCount: currentState.turnCount
                     });
 
                     return currentState; // Commit transaction
@@ -1745,7 +1772,7 @@
                 const difficultyNames = {
                     'ai-easy': 'Easy',
                     'ai-hard': 'Hard',
-                    'ai-extreme': 'EXTREME'
+                    'ai-extreme': 'INSANE'
                 };
                 difficultyDisplay.innerHTML = `<span class="difficulty-badge ${getDifficultyClass(mode)}">${difficultyNames[mode]}</span>`;
             } else {
@@ -2010,7 +2037,7 @@
             const validMoves = getValidMoves();
             if (validMoves.length === 0) return null;
 
-            // EXTREME: Use deep lookahead minimax
+            // INSANE: Use deep lookahead minimax
             let bestMove = null;
             let bestScore = -Infinity;
 
@@ -2040,7 +2067,7 @@
                 }
 
                 // Evaluate this position with deeper lookahead
-                let score = evaluateMoveWithLookahead(move, 3); // 3 moves deep for EXTREME difficulty
+                let score = evaluateMoveWithLookahead(move, 3); // 3 moves deep for INSANE difficulty
 
                 // Restore state
                 microBoards = savedMicroBoards;
@@ -2717,7 +2744,7 @@
             const names = {
                 'ai-easy': 'Easy',
                 'ai-hard': 'Hard',
-                'ai-extreme': 'EXTREME'
+                'ai-extreme': 'INSANE'
             };
             return names[difficulty] || difficulty;
         }
@@ -3004,7 +3031,7 @@
             const difficultyNames = {
                 'ai-easy': 'Easy',
                 'ai-hard': 'Hard',
-                'ai-extreme': 'EXTREME'
+                'ai-extreme': 'INSANE'
             };
             const breakdownHTML = `
                 <div style="text-align: left; display: inline-block;">
