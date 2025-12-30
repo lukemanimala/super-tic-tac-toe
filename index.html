@@ -739,6 +739,113 @@
             width: 100%;
         }
 
+        /* Debug Panel Styles */
+        .debug-panel {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            width: 350px;
+            max-height: 90vh;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            color: white;
+            font-family: 'Space Grotesk', monospace;
+            z-index: 10000;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .debug-header {
+            background: #667eea;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #764ba2;
+        }
+
+        .debug-content {
+            padding: 15px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .debug-section {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .debug-section:last-of-type {
+            border-bottom: none;
+        }
+
+        .debug-actions {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .debug-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            font-size: 11px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Space Grotesk', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .debug-btn:hover {
+            background: #764ba2;
+            transform: translateY(-1px);
+        }
+
+        .debug-macro-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 30px);
+            gap: 3px;
+            margin-top: 5px;
+        }
+
+        .debug-macro-cell {
+            width: 30px;
+            height: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .debug-macro-cell.active {
+            background: rgba(76, 175, 80, 0.5);
+            border-color: #4CAF50;
+            box-shadow: 0 0 5px #4CAF50;
+        }
+
+        .debug-macro-cell.x {
+            background: rgba(231, 76, 60, 0.3);
+            color: #e74c3c;
+        }
+
+        .debug-macro-cell.o {
+            background: rgba(52, 152, 219, 0.3);
+            color: #3498db;
+        }
+
+        .debug-macro-cell.draw {
+            background: rgba(158, 158, 158, 0.3);
+            color: #999;
+        }
+
         /* Mobile Responsive Styles */
         @media screen and (max-width: 768px) {
             body {
@@ -1112,6 +1219,37 @@
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
                     <button onclick="saveNameEdit()" class="submit-score-btn">Save</button>
                     <button onclick="closeNameEditModal()" class="submit-score-btn" style="background: #999;">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Debug Panel (Toggle with Ctrl+Shift+D) -->
+        <div id="debugPanel" class="debug-panel hidden">
+            <div class="debug-header">
+                <span style="font-weight: bold;">🐛 Debug Panel</span>
+                <button onclick="toggleDebugPanel()" style="background: none; border: none; color: white; cursor: pointer; font-size: 20px; padding: 0;">×</button>
+            </div>
+            <div class="debug-content">
+                <div class="debug-section">
+                    <strong>Game State:</strong>
+                    <div id="debugGameState" style="font-family: monospace; font-size: 11px; margin-top: 5px;"></div>
+                </div>
+                <div class="debug-section">
+                    <strong>Macro Board Visual:</strong>
+                    <div id="debugMacroBoard" style="margin-top: 5px;"></div>
+                </div>
+                <div class="debug-section">
+                    <strong>Active Board:</strong>
+                    <div id="debugActiveBoard" style="font-family: monospace; margin-top: 5px;"></div>
+                </div>
+                <div class="debug-section">
+                    <strong>State Change Log:</strong>
+                    <div id="debugLog" style="font-family: monospace; font-size: 10px; max-height: 150px; overflow-y: auto; margin-top: 5px; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 3px;"></div>
+                </div>
+                <div class="debug-actions">
+                    <button onclick="exportDebugState()" class="debug-btn">📋 Copy State JSON</button>
+                    <button onclick="downloadDebugLog()" class="debug-btn">💾 Download Log</button>
+                    <button onclick="clearDebugLog()" class="debug-btn">🗑️ Clear Log</button>
                 </div>
             </div>
         </div>
@@ -1566,9 +1704,12 @@
 
         // Sync local game state from remote Firebase data
         function syncLocalStateFromRemote(remoteState) {
+            logDebug('🔄 syncLocalStateFromRemote called');
+
             currentPlayer = remoteState.currentPlayer;
             // Firebase returns undefined for null values, so explicitly convert
             activeBoard = remoteState.activeBoard === undefined ? null : remoteState.activeBoard;
+            logDebug(`  Remote: player=${currentPlayer}, activeBoard=${activeBoard}, gameOver=${remoteState.gameOver}`);
 
             // Convert Firebase objects back to arrays (Firebase converts arrays to objects)
             // Ensure we always have proper arrays with 9 elements
@@ -1595,6 +1736,7 @@
             }
 
             console.log('Synced state:', { macroState, microBoards, currentPlayer, activeBoard });
+            logDebug(`  ✓ Sync complete: macroState has ${macroState.filter(s => s !== null).length} won boards`);
 
             gameOver = remoteState.gameOver;
             turnCount = remoteState.turnCount;
@@ -2028,12 +2170,25 @@
                 return false;
             }
 
-            if (macroState[macroIndex] !== null) return false;
-            if (microBoards[macroIndex][microIndex] !== null) return false;
-            if (activeBoard !== null && activeBoard !== macroIndex) return false;
+            // Debug logging
+            logDebug(`makeMove: macro=${macroIndex}, micro=${microIndex}, player=${currentPlayer}, isAI=${isAI}`);
+
+            if (macroState[macroIndex] !== null) {
+                logDebug(`  ✗ REJECTED: Board ${macroIndex} already won/drawn (${macroState[macroIndex]})`);
+                return false;
+            }
+            if (microBoards[macroIndex][microIndex] !== null) {
+                logDebug(`  ✗ REJECTED: Cell already filled (${microBoards[macroIndex][microIndex]})`);
+                return false;
+            }
+            if (activeBoard !== null && activeBoard !== macroIndex) {
+                logDebug(`  ✗ REJECTED: Wrong board (activeBoard=${activeBoard}, tried=${macroIndex})`);
+                return false;
+            }
 
             microBoards[macroIndex][microIndex] = currentPlayer;
             updateCell(macroIndex, microIndex, isAI);
+            logDebug(`  ✓ MOVE ACCEPTED: ${currentPlayer} played on board ${macroIndex}, cell ${microIndex}`);
 
             // Play move sound
             playSound(isAI ? 'aiMove' : 'playerMove');
@@ -2100,11 +2255,15 @@
 
             if (macroState[microIndex] === null) {
                 activeBoard = microIndex;
+                logDebug(`  → Next activeBoard = ${microIndex} (board is available)`);
             } else {
                 activeBoard = null;
+                logDebug(`  → Next activeBoard = null (board ${microIndex} won/drawn, play anywhere)`);
             }
 
+            const prevPlayer = currentPlayer;
             currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            logDebug(`  → Player switched: ${prevPlayer} → ${currentPlayer}`);
             updateBoardState();
             return true;
         }
@@ -2713,6 +2872,9 @@
         }
 
         function updateBoardState() {
+            // Debug logging
+            logDebug(`updateBoardState: player=${currentPlayer}, activeBoard=${activeBoard}, gameOver=${gameOver}`);
+
             for (let i = 0; i < 9; i++) {
                 const microBoard = document.getElementById(`micro-${i}`);
                 microBoard.classList.remove('active', 'inactive');
@@ -2725,6 +2887,7 @@
                     continue;
                 } else if (activeBoard === null || activeBoard === i) {
                     microBoard.classList.add('active');
+                    logDebug(`  ✓ Board ${i} set ACTIVE`);
                 } else {
                     microBoard.classList.add('inactive');
                 }
@@ -3341,6 +3504,180 @@
             setTimeout(() => {
                 document.getElementById('nameChar1').focus();
             }, 100);
+        }
+
+        // ===== DEBUG PANEL FUNCTIONS =====
+
+        let debugLog = [];
+        let debugPanelVisible = false;
+
+        // Toggle debug panel with keyboard shortcut
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+                e.preventDefault();
+                toggleDebugPanel();
+            }
+        });
+
+        function toggleDebugPanel() {
+            const panel = document.getElementById('debugPanel');
+            debugPanelVisible = !debugPanelVisible;
+
+            if (debugPanelVisible) {
+                panel.classList.remove('hidden');
+                updateDebugDisplay();
+                // Start auto-updating
+                if (window.debugUpdateInterval) clearInterval(window.debugUpdateInterval);
+                window.debugUpdateInterval = setInterval(updateDebugDisplay, 500);
+            } else {
+                panel.classList.add('hidden');
+                if (window.debugUpdateInterval) {
+                    clearInterval(window.debugUpdateInterval);
+                    window.debugUpdateInterval = null;
+                }
+            }
+        }
+
+        function updateDebugDisplay() {
+            if (!debugPanelVisible) return;
+
+            // Update game state display
+            const stateInfo = `
+currentPlayer: ${currentPlayer}
+activeBoard: ${activeBoard}
+gameOver: ${gameOver}
+gameMode: ${gameMode}
+localPlayerSide: ${localPlayerSide || 'N/A'}
+currentGameId: ${currentGameId || 'N/A'}
+            `.trim();
+            document.getElementById('debugGameState').textContent = stateInfo;
+
+            // Update macro board visual
+            const macroContainer = document.getElementById('debugMacroBoard');
+            let macroHTML = '<div class="debug-macro-grid">';
+            for (let i = 0; i < 9; i++) {
+                const state = macroState[i];
+                let classes = 'debug-macro-cell';
+                let content = i;
+
+                if (state === 'X') {
+                    classes += ' x';
+                    content = 'X';
+                } else if (state === 'O') {
+                    classes += ' o';
+                    content = 'O';
+                } else if (state === 'draw') {
+                    classes += ' draw';
+                    content = '-';
+                }
+
+                if (activeBoard === i) {
+                    classes += ' active';
+                }
+
+                macroHTML += `<div class="${classes}">${content}</div>`;
+            }
+            macroHTML += '</div>';
+            macroContainer.innerHTML = macroHTML;
+
+            // Update active board info
+            const activeBoardInfo = activeBoard !== null
+                ? `Board ${activeBoard} (Row ${Math.floor(activeBoard / 3)}, Col ${activeBoard % 3})`
+                : 'ANY (Play anywhere)';
+            document.getElementById('debugActiveBoard').textContent = activeBoardInfo;
+
+            // Update log display
+            const logContainer = document.getElementById('debugLog');
+            if (debugLog.length > 0) {
+                logContainer.innerHTML = debugLog.slice(-20).map(entry =>
+                    `<div style="color: #aaa; margin-bottom: 3px;">[${entry.time}] ${entry.msg}</div>`
+                ).join('');
+                logContainer.scrollTop = logContainer.scrollHeight;
+            } else {
+                logContainer.innerHTML = '<div style="color: #666;">No log entries yet</div>';
+            }
+        }
+
+        function logDebug(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            debugLog.push({ time: timestamp, msg: message });
+
+            // Keep only last 100 entries
+            if (debugLog.length > 100) {
+                debugLog = debugLog.slice(-100);
+            }
+
+            if (debugPanelVisible) {
+                updateDebugDisplay();
+            }
+        }
+
+        function exportDebugState() {
+            const state = {
+                timestamp: new Date().toISOString(),
+                gameMode,
+                currentPlayer,
+                activeBoard,
+                gameOver,
+                macroState: [...macroState],
+                microBoards: microBoards.map(board => [...board]),
+                localPlayerSide,
+                currentGameId,
+                isOnlineGame,
+                gameData: gameData || null
+            };
+
+            const json = JSON.stringify(state, null, 2);
+
+            // Copy to clipboard
+            navigator.clipboard.writeText(json).then(() => {
+                alert('Debug state copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                // Fallback: show in console
+                console.log('DEBUG STATE:', json);
+                alert('Debug state logged to console (F12)');
+            });
+        }
+
+        function downloadDebugLog() {
+            const logText = debugLog.map(entry => `[${entry.time}] ${entry.msg}`).join('\n');
+            const state = {
+                timestamp: new Date().toISOString(),
+                gameMode,
+                currentPlayer,
+                activeBoard,
+                gameOver,
+                macroState: [...macroState],
+                microBoards: microBoards.map(board => [...board]),
+                localPlayerSide,
+                currentGameId
+            };
+
+            const content = `=== TIC-TAC-GO INSANE DEBUG LOG ===
+Generated: ${new Date().toLocaleString()}
+
+=== CURRENT GAME STATE ===
+${JSON.stringify(state, null, 2)}
+
+=== EVENT LOG ===
+${logText}
+`;
+
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `tictacgo-debug-${Date.now()}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function clearDebugLog() {
+            debugLog = [];
+            updateDebugDisplay();
         }
 
         // ===== SEO META TAG UPDATES =====
