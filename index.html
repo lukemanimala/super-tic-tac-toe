@@ -856,21 +856,51 @@
 
             switch(type) {
                 case 'playerMove':
-                    oscillator.frequency.value = 523.25; // C5
+                    // Springy upward chime with pitch sweep
+                    oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+                    oscillator.frequency.exponentialRampToValueAtTime(1046.50, audioContext.currentTime + 0.08); // C6
                     oscillator.type = 'sine';
-                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-                    oscillator.start(audioContext.currentTime);
-                    oscillator.stop(audioContext.currentTime + 0.1);
-                    break;
-
-                case 'aiMove':
-                    oscillator.frequency.value = 392.00; // G4
-                    oscillator.type = 'triangle';
-                    gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.35, audioContext.currentTime);
                     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
                     oscillator.start(audioContext.currentTime);
                     oscillator.stop(audioContext.currentTime + 0.15);
+
+                    // Add harmonic layer for richness
+                    const harmonic = audioContext.createOscillator();
+                    const harmonicGain = audioContext.createGain();
+                    harmonic.connect(harmonicGain);
+                    harmonicGain.connect(audioContext.destination);
+                    harmonic.frequency.setValueAtTime(659.25, audioContext.currentTime); // E5
+                    harmonic.frequency.exponentialRampToValueAtTime(1318.51, audioContext.currentTime + 0.08); // E6
+                    harmonic.type = 'sine';
+                    harmonicGain.gain.setValueAtTime(0.15, audioContext.currentTime);
+                    harmonicGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+                    harmonic.start(audioContext.currentTime);
+                    harmonic.stop(audioContext.currentTime + 0.15);
+                    break;
+
+                case 'aiMove':
+                    // Bouncy downward chime with pitch sweep
+                    oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime); // E5
+                    oscillator.frequency.exponentialRampToValueAtTime(392.00, audioContext.currentTime + 0.08); // G4
+                    oscillator.type = 'sine';
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.15);
+
+                    // Add harmonic layer
+                    const aiHarmonic = audioContext.createOscillator();
+                    const aiHarmonicGain = audioContext.createGain();
+                    aiHarmonic.connect(aiHarmonicGain);
+                    aiHarmonicGain.connect(audioContext.destination);
+                    aiHarmonic.frequency.setValueAtTime(783.99, audioContext.currentTime); // G5
+                    aiHarmonic.frequency.exponentialRampToValueAtTime(493.88, audioContext.currentTime + 0.08); // B4
+                    aiHarmonic.type = 'sine';
+                    aiHarmonicGain.gain.setValueAtTime(0.15, audioContext.currentTime);
+                    aiHarmonicGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+                    aiHarmonic.start(audioContext.currentTime);
+                    aiHarmonic.stop(audioContext.currentTime + 0.15);
                     break;
 
                 case 'microWin':
