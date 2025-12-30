@@ -1714,10 +1714,13 @@
 
             // Convert Firebase objects back to arrays (Firebase converts arrays to objects)
             // Ensure we always have proper arrays with 9 elements
+            // CRITICAL: Handle sparse arrays - Firebase stores [X, null, null...] as [X]
             if (remoteState.macroState) {
-                macroState = Array.isArray(remoteState.macroState)
-                    ? [...remoteState.macroState]
-                    : Array.from({ length: 9 }, (_, i) => remoteState.macroState[i] || null);
+                // Always create full 9-element array, converting undefined to null
+                macroState = Array.from({ length: 9 }, (_, i) => {
+                    const val = remoteState.macroState[i];
+                    return val === undefined ? null : val;
+                });
             } else {
                 macroState = Array(9).fill(null);
             }
@@ -1726,9 +1729,11 @@
                 microBoards = Array.from({ length: 9 }, (_, i) => {
                     const board = remoteState.microBoards[i];
                     if (board) {
-                        return Array.isArray(board)
-                            ? [...board]
-                            : Array.from({ length: 9 }, (_, j) => board[j] || null);
+                        // Always create full 9-element array for each board
+                        return Array.from({ length: 9 }, (_, j) => {
+                            const val = board[j];
+                            return val === undefined ? null : val;
+                        });
                     }
                     return Array(9).fill(null);
                 });
