@@ -1474,12 +1474,20 @@
                         return; // Abort - not our turn
                     }
 
-                    // Convert Firebase objects to arrays for validation
-                    const stateMacroState = Array.from({ length: 9 }, (_, i) => currentState.macroState[i] || null);
-                    const stateMicroBoards = Array.from({ length: 9 }, (_, i) => {
-                        const board = currentState.microBoards[i];
-                        return board ? Array.from({ length: 9 }, (_, j) => board[j] || null) : Array(9).fill(null);
-                    });
+                    // Convert Firebase objects to arrays for validation - handle undefined
+                    const stateMacroState = currentState.macroState
+                        ? Array.from({ length: 9 }, (_, i) => (currentState.macroState[i] !== undefined ? currentState.macroState[i] : null))
+                        : Array(9).fill(null);
+
+                    const stateMicroBoards = currentState.microBoards
+                        ? Array.from({ length: 9 }, (_, i) => {
+                            const board = currentState.microBoards[i];
+                            if (board) {
+                                return Array.from({ length: 9 }, (_, j) => (board[j] !== undefined ? board[j] : null));
+                            }
+                            return Array(9).fill(null);
+                          })
+                        : Array(9).fill(null).map(() => Array(9).fill(null));
 
                     if (stateMacroState[macroIndex] !== null) return; // Board won
                     if (stateMicroBoards[macroIndex][microIndex] !== null) return; // Cell filled
