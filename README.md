@@ -1,6 +1,6 @@
-# Super Tic Tac Toe
+# Tic-Tac-Go Insane
 
-An advanced implementation of Ultimate Tic Tac Toe with AI opponents and visual effects.
+The ultimate strategy game that takes Tic-Tac-Toe to mind-bending levels. A 3x3 grid of 3x3 boards where every move determines your opponent's next battleground. Master the micro-game, dominate the macro-game, and go insane!
 
 ## Features
 
@@ -46,15 +46,18 @@ The EXTREME AI implements sophisticated strategies:
 
 ## Play Now
 
-Visit the live game at: [https://lukemanimala.github.io/super-tic-tac-toe/](https://lukemanimala.github.io/super-tic-tac-toe/)
+Challenge yourself at: [https://lukemanimala.github.io/super-tic-tac-toe/](https://lukemanimala.github.io/super-tic-tac-toe/)
+
+Think you can handle the insanity?
 
 ## Technologies
 
 - Pure HTML5
 - CSS3 with animations and gradients
 - Vanilla JavaScript
-- Web Audio API for sound effects
-- Google Fonts (DM Sans)
+- Web Audio API for procedural sound effects
+- Firebase Realtime Database for global leaderboards
+- Google Fonts (Space Grotesk)
 
 ---
 
