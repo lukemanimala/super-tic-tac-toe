@@ -1287,8 +1287,9 @@
         // Subscribe to game state changes
         function subscribeToGameState(gameId) {
             const gameRef = database.ref(`${gamePathPrefix}/${gameId}`);
+            let gameStarted = false;
 
-            // Listen for when player O joins
+            // Listen for all game updates
             gameStateListener = gameRef.on('value', (snapshot) => {
                 const gameData = snapshot.val();
 
@@ -1298,11 +1299,40 @@
                     return;
                 }
 
-                // Check if player O joined
-                if (gameData.metadata.status === 'active' && gameData.players.O) {
-                    // Start the game!
+                // If game is active and not started yet, start it
+                if (!gameStarted && gameData.metadata.status === 'active' && gameData.players.O) {
+                    gameStarted = true;
                     document.getElementById('waitingRoomModal').classList.add('hidden');
                     startOnlineGame(gameData);
+                    return;
+                }
+
+                // If game already started, sync the state for move updates
+                if (gameStarted && gameMode === 'online') {
+                    console.log('Syncing game state update');
+                    const previousPlayer = currentPlayer;
+                    syncLocalStateFromRemote(gameData.gameState);
+                    renderBoardFromState();
+                    updateBoardState();
+
+                    // Play sound for opponent's move (if turn switched away from us)
+                    if (previousPlayer === localPlayerSide && currentPlayer !== localPlayerSide) {
+                        playSound('aiMove'); // Use AI sound for opponent
+                    }
+
+                    // Check if game ended
+                    if (gameData.gameState.gameOver) {
+                        const macroWinner = checkWinner(macroState);
+                        if (macroWinner) {
+                            gameOver = true;
+                            const winnerText = macroWinner === localPlayerSide ? 'You win!' : 'Opponent wins!';
+                            document.getElementById('gameInfo').textContent = winnerText;
+                            playSound(macroWinner === localPlayerSide ? 'win' : 'lose');
+                        } else {
+                            gameOver = true;
+                            document.getElementById('gameInfo').textContent = "Game is a draw!";
+                        }
+                    }
                 }
             });
         }
@@ -1400,6 +1430,113 @@
 
             gameOver = remoteState.gameOver;
             turnCount = remoteState.turnCount;
+        }
+
+        // Make a move in an online game
+        async function makeOnlineMove(macroIndex, microIndex) {
+            // Validate move locally first
+            if (macroState[macroIndex] !== null) {
+                console.log('Board already won');
+                return;
+            }
+            if (microBoards[macroIndex][microIndex] !== null) {
+                console.log('Cell already filled');
+                return;
+            }
+            if (activeBoard !== null && activeBoard !== macroIndex) {
+                console.log('Wrong board');
+                return;
+            }
+
+            console.log('Making online move:', macroIndex, microIndex);
+
+            // Use Firebase transaction for atomic update
+            const gameStateRef = database.ref(`${gamePathPrefix}/${currentGameId}/gameState`);
+
+            try {
+                await gameStateRef.transaction((currentState) => {
+                    if (!currentState) {
+                        console.error('No game state found');
+                        return; // Abort transaction
+                    }
+
+                    // Server-side validation
+                    if (currentState.currentPlayer !== localPlayerSide) {
+                        console.log('Transaction aborted: not your turn');
+                        return; // Abort - not our turn
+                    }
+
+                    // Convert Firebase objects to arrays for validation
+                    const stateMacroState = Array.from({ length: 9 }, (_, i) => currentState.macroState[i] || null);
+                    const stateMicroBoards = Array.from({ length: 9 }, (_, i) => {
+                        const board = currentState.microBoards[i];
+                        return board ? Array.from({ length: 9 }, (_, j) => board[j] || null) : Array(9).fill(null);
+                    });
+
+                    if (stateMacroState[macroIndex] !== null) return; // Board won
+                    if (stateMicroBoards[macroIndex][microIndex] !== null) return; // Cell filled
+                    if (currentState.activeBoard !== null && currentState.activeBoard !== macroIndex) return; // Wrong board
+
+                    // Make the move
+                    stateMicroBoards[macroIndex][microIndex] = localPlayerSide;
+
+                    // Check if micro board is won
+                    const microWinner = checkWinner(stateMicroBoards[macroIndex]);
+                    if (microWinner) {
+                        stateMacroState[macroIndex] = microWinner;
+                    } else if (stateMicroBoards[macroIndex].every(cell => cell !== null)) {
+                        stateMacroState[macroIndex] = 'draw';
+                    }
+
+                    // Check if game is won
+                    const macroWinner = checkWinner(stateMacroState);
+                    const isGameOver = macroWinner !== null || stateMacroState.every(state => state !== null);
+
+                    // Determine next active board
+                    let nextActiveBoard = null;
+                    if (!isGameOver) {
+                        if (stateMacroState[microIndex] === null) {
+                            nextActiveBoard = microIndex;
+                        } else {
+                            nextActiveBoard = null; // Can play anywhere
+                        }
+                    }
+
+                    // Switch player
+                    const nextPlayer = localPlayerSide === 'X' ? 'O' : 'X';
+
+                    // Update state
+                    currentState.microBoards = stateMicroBoards;
+                    currentState.macroState = stateMacroState;
+                    currentState.currentPlayer = nextPlayer;
+                    currentState.activeBoard = nextActiveBoard;
+                    currentState.gameOver = isGameOver;
+                    currentState.turnCount = (currentState.turnCount || 0) + 1;
+
+                    // Add move to history
+                    if (!currentState.moves) currentState.moves = [];
+                    currentState.moves.push({
+                        player: localPlayerSide,
+                        macroIndex,
+                        microIndex,
+                        timestamp: Date.now()
+                    });
+
+                    return currentState; // Commit transaction
+                });
+
+                console.log('Move transaction successful');
+
+                // Play sound for our move
+                playSound('playerMove');
+
+                // Update last activity timestamp
+                await database.ref(`${gamePathPrefix}/${currentGameId}/metadata/lastActivityAt`)
+                    .set(firebase.database.ServerValue.TIMESTAMP);
+
+            } catch (error) {
+                console.error('Error making move:', error);
+            }
         }
 
         // Unsubscribe from game state
@@ -1636,6 +1773,18 @@
 
         function handleCellClick(macroIndex, microIndex) {
             if (gameOver) return;
+
+            // Online game: check if it's our turn
+            if (gameMode === 'online') {
+                if (currentPlayer !== localPlayerSide) {
+                    console.log('Not your turn!');
+                    return;
+                }
+                makeOnlineMove(macroIndex, microIndex);
+                return;
+            }
+
+            // AI game: prevent clicks during AI turn
             if (gameMode !== '2player' && currentPlayer === aiPlayer) return;
 
             if (!makeMove(macroIndex, microIndex, false)) return;
