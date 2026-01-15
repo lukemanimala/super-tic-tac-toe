@@ -1028,6 +1028,280 @@
                 font-size: 35px;
             }
         }
+
+        /* Tutorial Mode Styles */
+        .tutorial-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 500;
+            pointer-events: none;
+        }
+
+        .tutorial-tooltip {
+            position: fixed;
+            background: white;
+            padding: 20px 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            z-index: 1100;
+            max-width: 350px;
+            font-family: 'Space Grotesk', sans-serif;
+            animation: tooltipFadeIn 0.3s ease;
+        }
+
+        @keyframes tooltipFadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tutorial-tooltip h3 {
+            color: #667eea;
+            margin: 0 0 10px 0;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tutorial-tooltip p {
+            color: #333;
+            margin: 0 0 15px 0;
+            line-height: 1.5;
+            font-size: 15px;
+        }
+
+        .tutorial-tooltip .step-indicator {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 8px;
+        }
+
+        .tutorial-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 15px;
+        }
+
+        .tutorial-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 700;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .tutorial-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .tutorial-btn.secondary {
+            background: #f0f0f0;
+            color: #667eea;
+        }
+
+        .tutorial-btn.secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .tutorial-highlight {
+            position: relative;
+            z-index: 600;
+            box-shadow: 0 0 0 4px #ffd700, 0 0 20px rgba(255, 215, 0, 0.6) !important;
+            animation: tutorialPulse 1.5s infinite;
+        }
+
+        @keyframes tutorialPulse {
+            0%, 100% { box-shadow: 0 0 0 4px #ffd700, 0 0 20px rgba(255, 215, 0, 0.6); }
+            50% { box-shadow: 0 0 0 6px #ffd700, 0 0 30px rgba(255, 215, 0, 0.8); }
+        }
+
+        .tutorial-cell-highlight {
+            position: relative;
+            z-index: 700;
+            background: #ffd700 !important;
+            animation: cellPulse 1s infinite;
+        }
+
+        @keyframes cellPulse {
+            0%, 100% { background: #ffd700; transform: scale(1); }
+            50% { background: #ffed4e; transform: scale(1.15); }
+        }
+
+        .tutorial-arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border: 10px solid transparent;
+        }
+
+        .tutorial-arrow.up {
+            border-bottom-color: white;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .tutorial-arrow.down {
+            border-top-color: white;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .tutorial-arrow.left {
+            border-right-color: white;
+            left: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .tutorial-arrow.right {
+            border-left-color: white;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .tutorial-progress {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 15px;
+        }
+
+        .tutorial-progress-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ddd;
+            transition: all 0.3s ease;
+        }
+
+        .tutorial-progress-dot.active {
+            background: #667eea;
+            transform: scale(1.2);
+        }
+
+        .tutorial-progress-dot.completed {
+            background: #4CAF50;
+        }
+
+        .tutorial-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .tutorial-intro-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1200;
+            padding: 20px;
+        }
+
+        .tutorial-intro-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            color: white;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .tutorial-intro-content h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .tutorial-intro-content p {
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            opacity: 0.95;
+        }
+
+        .tutorial-complete-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1200;
+            padding: 20px;
+        }
+
+        .tutorial-complete-content {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            color: white;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .tutorial-complete-content h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .tutorial-complete-content p {
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        @media screen and (max-width: 768px) {
+            .tutorial-tooltip {
+                max-width: 300px;
+                padding: 15px 20px;
+                font-size: 14px;
+            }
+
+            .tutorial-tooltip h3 {
+                font-size: 1.1em;
+            }
+
+            .tutorial-tooltip p {
+                font-size: 14px;
+            }
+
+            .tutorial-intro-content,
+            .tutorial-complete-content {
+                padding: 30px 20px;
+            }
+
+            .tutorial-intro-content h2,
+            .tutorial-complete-content h2 {
+                font-size: 1.6em;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1037,6 +1311,7 @@
         <div class="mode-selection" id="modeSelection">
             <h2>Select Game Mode</h2>
             <div class="mode-buttons">
+                <button class="mode-button" onclick="startTutorial()" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">Learn to Play</button>
                 <button class="mode-button" onclick="startGame('2player')">2 Players</button>
                 <button class="mode-button" onclick="startGame('ai-easy')">vs AI (Easy)</button>
                 <button class="mode-button" onclick="startGame('ai-hard')">vs AI (Hard)</button>
@@ -1250,6 +1525,45 @@
                     <button onclick="exportDebugState()" class="debug-btn">📋 Copy State JSON</button>
                     <button onclick="downloadDebugLog()" class="debug-btn">💾 Download Log</button>
                     <button onclick="clearDebugLog()" class="debug-btn">🗑️ Clear Log</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tutorial Elements -->
+        <div id="tutorialOverlay" class="tutorial-overlay hidden"></div>
+        <div id="tutorialTooltip" class="tutorial-tooltip hidden">
+            <div class="tutorial-arrow up" id="tutorialArrow"></div>
+            <div class="tutorial-progress" id="tutorialProgress"></div>
+            <div class="step-indicator" id="tutorialStepIndicator">Step 1 of 10</div>
+            <h3 id="tutorialTitle">Welcome!</h3>
+            <p id="tutorialText">Let's learn how to play!</p>
+            <div class="tutorial-buttons" id="tutorialButtons">
+                <button class="tutorial-btn secondary" onclick="skipTutorial()">Skip</button>
+                <button class="tutorial-btn" onclick="nextTutorialStep()">Next</button>
+            </div>
+        </div>
+
+        <!-- Tutorial Intro Modal -->
+        <div id="tutorialIntroModal" class="tutorial-intro-modal hidden">
+            <div class="tutorial-intro-content">
+                <h2>Welcome to the Tutorial!</h2>
+                <p>Super Tic-Tac-Toe is a strategic twist on the classic game. You'll play on 9 mini boards arranged in a 3x3 grid.</p>
+                <p>The twist? <strong>Where you play determines where your opponent must play next!</strong></p>
+                <div class="tutorial-buttons" style="justify-content: center; margin-top: 30px;">
+                    <button class="tutorial-btn secondary" onclick="skipTutorial()" style="background: rgba(255,255,255,0.2); color: white;">Skip Tutorial</button>
+                    <button class="tutorial-btn" onclick="beginTutorial()" style="background: white; color: #667eea;">Start Learning</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tutorial Complete Modal -->
+        <div id="tutorialCompleteModal" class="tutorial-complete-modal hidden">
+            <div class="tutorial-complete-content">
+                <h2>You're Ready!</h2>
+                <p>Congratulations! You've mastered the basics of Super Tic-Tac-Toe.</p>
+                <p><strong>Pro tip:</strong> Think ahead! Every move you make controls where your opponent plays next.</p>
+                <div class="tutorial-buttons" style="justify-content: center; margin-top: 30px;">
+                    <button class="tutorial-btn" onclick="finishTutorial()" style="background: white; color: #38f9d7;">Play Now!</button>
                 </div>
             </div>
         </div>
@@ -2107,6 +2421,11 @@
             modal.classList.add('hidden');
             modal.style.display = 'none';
 
+            // Clean up tutorial state
+            if (tutorialActive) {
+                endTutorial();
+            }
+
             // Clean up online game state
             if (isOnlineGame) {
                 unsubscribeFromGame();
@@ -2156,6 +2475,12 @@
 
         function handleCellClick(macroIndex, microIndex) {
             if (gameOver) return;
+
+            // Tutorial mode: handle guided moves
+            if (gameMode === 'tutorial') {
+                handleTutorialCellClick(macroIndex, microIndex);
+                return;
+            }
 
             // Online game: check if it's our turn
             if (gameMode === 'online') {
@@ -2909,7 +3234,14 @@
 
             if (!gameOver) {
                 let playerName = currentPlayer;
-                if (gameMode === 'online') {
+                if (gameMode === 'tutorial') {
+                    // Tutorial mode: show player turn with tutorial context
+                    playerName = currentPlayer === 'X' ? 'Your' : "Opponent's";
+                    const message = activeBoard === null
+                        ? `${playerName} turn - Follow the tutorial`
+                        : `${playerName} turn - Play in highlighted board`;
+                    document.getElementById('gameInfo').textContent = message;
+                } else if (gameMode === 'online') {
                     // Online game: show "Your turn" or "Opponent's turn"
                     playerName = currentPlayer === localPlayerSide ? 'Your' : "Opponent's";
                     const message = activeBoard === null
@@ -3697,6 +4029,342 @@ ${logText}
         function clearDebugLog() {
             debugLog = [];
             updateDebugDisplay();
+        }
+
+        // ===== TUTORIAL MODE =====
+
+        let tutorialActive = false;
+        let tutorialStep = 0;
+        let tutorialMoves = [];
+
+        const tutorialSteps = [
+            {
+                type: 'info',
+                title: 'The Board',
+                text: 'This is Super Tic-Tac-Toe! You have 9 mini Tic-Tac-Toe boards arranged in a 3x3 grid. Your goal is to win 3 mini boards in a row.',
+                highlight: 'macroBoard'
+            },
+            {
+                type: 'action',
+                title: 'Make Your First Move',
+                text: 'You are X (red). Since this is the first move, you can play anywhere! Click the center cell of the center board to start.',
+                targetBoard: 4,
+                targetCell: 4,
+                highlight: 'cell'
+            },
+            {
+                type: 'info',
+                title: 'The Key Rule',
+                text: 'Notice what happened? You played in the CENTER cell, so now O must play in the CENTER board. The position of your move determines where your opponent plays next!',
+                highlight: 'board-4'
+            },
+            {
+                type: 'ai-move',
+                title: "Opponent's Turn",
+                text: 'Watch as O makes their move. They have to play somewhere in the center board...',
+                aiBoard: 4,
+                aiCell: 0
+            },
+            {
+                type: 'info',
+                title: 'Your Turn Again',
+                text: 'O played in the top-left cell of the center board. That means YOU must now play in the top-left board (board 0). See how the green highlight shows where you can play?',
+                highlight: 'board-0'
+            },
+            {
+                type: 'action',
+                title: 'Strategic Thinking',
+                text: 'Play in the center cell of the top-left board. This will send O back to the center board.',
+                targetBoard: 0,
+                targetCell: 4,
+                highlight: 'cell'
+            },
+            {
+                type: 'ai-move',
+                title: 'The Game Continues',
+                text: 'O plays in the center board again, taking the top-middle cell...',
+                aiBoard: 4,
+                aiCell: 1
+            },
+            {
+                type: 'action',
+                title: 'Control the Game',
+                text: 'Now you must play in the top-middle board (board 1). Try the center cell there!',
+                targetBoard: 1,
+                targetCell: 4,
+                highlight: 'cell'
+            },
+            {
+                type: 'ai-move',
+                title: 'Opponent Responds',
+                text: 'O is forced to play in the center board again...',
+                aiBoard: 4,
+                aiCell: 2
+            },
+            {
+                type: 'info',
+                title: 'O Wins a Board!',
+                text: 'O played in the top-right cell. Now O has 0, 1, and 2 - the entire top row! O wins the center board!',
+                highlight: 'board-4'
+            },
+            {
+                type: 'info',
+                title: 'Winning Mini Boards',
+                text: 'When someone gets 3-in-a-row in a mini board, they WIN that board and their symbol appears on it. O now controls the center board!',
+                highlight: 'board-4'
+            },
+            {
+                type: 'action',
+                title: 'Continue Playing',
+                text: 'O sent you to board 2 (top-right), but that board is still available. Click the center cell to continue.',
+                targetBoard: 2,
+                targetCell: 4,
+                highlight: 'cell'
+            },
+            {
+                type: 'info',
+                title: 'The Ultimate Goal',
+                text: 'Remember: Win 3 mini boards in a row (horizontally, vertically, or diagonally) to win the whole game! Think of the 9 mini boards like one big Tic-Tac-Toe board.',
+                highlight: 'macroBoard'
+            },
+            {
+                type: 'complete',
+                title: 'You Got It!',
+                text: 'You understand the basics! The strategy is deep - every move affects where your opponent can play. Ready to test your skills?'
+            }
+        ];
+
+        function startTutorial() {
+            document.getElementById('tutorialIntroModal').classList.remove('hidden');
+        }
+
+        function beginTutorial() {
+            document.getElementById('tutorialIntroModal').classList.add('hidden');
+
+            // Initialize tutorial game
+            tutorialActive = true;
+            tutorialStep = 0;
+            tutorialMoves = [];
+            gameMode = 'tutorial';
+
+            // Hide mode selection, show game
+            document.getElementById('modeSelection').classList.add('hidden');
+            document.getElementById('gameArea').classList.remove('hidden');
+
+            // Hide irrelevant UI elements
+            document.getElementById('connectionStatus').classList.add('hidden');
+            document.getElementById('opponentInfo').classList.add('hidden');
+            document.getElementById('playerInfo').classList.add('hidden');
+            document.getElementById('rematchRequest').classList.add('hidden');
+
+            // Show tutorial badge
+            const difficultyDisplay = document.getElementById('difficultyDisplay');
+            difficultyDisplay.innerHTML = '<span class="tutorial-badge">Tutorial Mode</span>';
+
+            // Reset and init game
+            resetGame();
+
+            // Show first step
+            showTutorialStep();
+        }
+
+        function showTutorialStep() {
+            const step = tutorialSteps[tutorialStep];
+            if (!step) return;
+
+            const overlay = document.getElementById('tutorialOverlay');
+            const tooltip = document.getElementById('tutorialTooltip');
+            const title = document.getElementById('tutorialTitle');
+            const text = document.getElementById('tutorialText');
+            const stepIndicator = document.getElementById('tutorialStepIndicator');
+            const buttons = document.getElementById('tutorialButtons');
+            const progress = document.getElementById('tutorialProgress');
+            const arrow = document.getElementById('tutorialArrow');
+
+            // Update progress dots
+            progress.innerHTML = tutorialSteps.map((_, i) =>
+                `<div class="tutorial-progress-dot ${i < tutorialStep ? 'completed' : ''} ${i === tutorialStep ? 'active' : ''}"></div>`
+            ).join('');
+
+            // Update content
+            stepIndicator.textContent = `Step ${tutorialStep + 1} of ${tutorialSteps.length}`;
+            title.textContent = step.title;
+            text.textContent = step.text;
+
+            // Clear previous highlights
+            clearTutorialHighlights();
+
+            // Handle different step types
+            if (step.type === 'complete') {
+                overlay.classList.add('hidden');
+                tooltip.classList.add('hidden');
+                document.getElementById('tutorialCompleteModal').classList.remove('hidden');
+                return;
+            }
+
+            // Show overlay for info steps
+            if (step.type === 'info') {
+                overlay.classList.remove('hidden');
+            } else {
+                overlay.classList.add('hidden');
+            }
+
+            // Apply highlights
+            if (step.highlight === 'macroBoard') {
+                const macroBoard = document.getElementById('macroBoard');
+                macroBoard.classList.add('tutorial-highlight');
+                positionTooltip(macroBoard, 'below');
+            } else if (step.highlight && step.highlight.startsWith('board-')) {
+                const boardIdx = parseInt(step.highlight.split('-')[1]);
+                const board = document.getElementById(`micro-${boardIdx}`);
+                board.classList.add('tutorial-highlight');
+                positionTooltip(board, 'right');
+            } else if (step.highlight === 'cell' && step.targetBoard !== undefined) {
+                const board = document.getElementById(`micro-${step.targetBoard}`);
+                const cells = board.querySelectorAll('.cell');
+                cells[step.targetCell].classList.add('tutorial-cell-highlight');
+                board.classList.add('tutorial-highlight');
+                positionTooltip(board, 'right');
+            }
+
+            // Show tooltip
+            tooltip.classList.remove('hidden');
+
+            // Update buttons based on step type
+            if (step.type === 'action') {
+                buttons.innerHTML = `
+                    <button class="tutorial-btn secondary" onclick="skipTutorial()">Skip</button>
+                    <span style="color: #999; font-size: 13px;">Click the highlighted cell</span>
+                `;
+            } else if (step.type === 'ai-move') {
+                buttons.innerHTML = `
+                    <button class="tutorial-btn secondary" onclick="skipTutorial()">Skip</button>
+                    <button class="tutorial-btn" onclick="doTutorialAIMove()">Watch</button>
+                `;
+            } else {
+                buttons.innerHTML = `
+                    <button class="tutorial-btn secondary" onclick="skipTutorial()">Skip</button>
+                    <button class="tutorial-btn" onclick="nextTutorialStep()">Next</button>
+                `;
+            }
+        }
+
+        function positionTooltip(element, position) {
+            const tooltip = document.getElementById('tutorialTooltip');
+            const arrow = document.getElementById('tutorialArrow');
+            const rect = element.getBoundingClientRect();
+
+            // Reset arrow classes
+            arrow.className = 'tutorial-arrow';
+
+            const tooltipWidth = 350;
+            const tooltipHeight = 200;
+            const padding = 20;
+
+            let left, top;
+
+            if (position === 'below') {
+                left = rect.left + rect.width / 2 - tooltipWidth / 2;
+                top = rect.bottom + padding;
+                arrow.classList.add('up');
+            } else if (position === 'right') {
+                left = rect.right + padding;
+                top = rect.top + rect.height / 2 - tooltipHeight / 2;
+                arrow.classList.add('left');
+
+                // If tooltip would go off screen right, position left instead
+                if (left + tooltipWidth > window.innerWidth - 20) {
+                    left = rect.left - tooltipWidth - padding;
+                    arrow.className = 'tutorial-arrow right';
+                }
+            }
+
+            // Clamp to viewport
+            left = Math.max(20, Math.min(left, window.innerWidth - tooltipWidth - 20));
+            top = Math.max(20, Math.min(top, window.innerHeight - tooltipHeight - 20));
+
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+        }
+
+        function clearTutorialHighlights() {
+            document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
+            document.querySelectorAll('.tutorial-cell-highlight').forEach(el => el.classList.remove('tutorial-cell-highlight'));
+        }
+
+        function nextTutorialStep() {
+            tutorialStep++;
+            if (tutorialStep < tutorialSteps.length) {
+                showTutorialStep();
+            }
+        }
+
+        function doTutorialAIMove() {
+            const step = tutorialSteps[tutorialStep];
+            if (step.type !== 'ai-move') return;
+
+            // Hide tooltip during AI move
+            document.getElementById('tutorialTooltip').classList.add('hidden');
+
+            // Make the AI move
+            setTimeout(() => {
+                if (makeMove(step.aiBoard, step.aiCell, true)) {
+                    tutorialMoves.push({ board: step.aiBoard, cell: step.aiCell, player: 'O' });
+                }
+
+                // Move to next step
+                setTimeout(() => {
+                    nextTutorialStep();
+                }, 800);
+            }, 500);
+        }
+
+        function handleTutorialCellClick(macroIndex, microIndex) {
+            if (!tutorialActive) return false;
+
+            const step = tutorialSteps[tutorialStep];
+            if (step.type !== 'action') return false;
+
+            // Check if this is the correct cell
+            if (step.targetBoard === macroIndex && step.targetCell === microIndex) {
+                // Correct move!
+                if (makeMove(macroIndex, microIndex, false)) {
+                    tutorialMoves.push({ board: macroIndex, cell: microIndex, player: 'X' });
+
+                    // Move to next step after a short delay
+                    setTimeout(() => {
+                        nextTutorialStep();
+                    }, 600);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        function skipTutorial() {
+            endTutorial();
+            resetToMenu();
+        }
+
+        function finishTutorial() {
+            endTutorial();
+            // Go back to menu and let them choose a game mode
+            resetToMenu();
+        }
+
+        function endTutorial() {
+            tutorialActive = false;
+            tutorialStep = 0;
+            gameMode = null;
+
+            // Hide all tutorial elements
+            document.getElementById('tutorialOverlay').classList.add('hidden');
+            document.getElementById('tutorialTooltip').classList.add('hidden');
+            document.getElementById('tutorialIntroModal').classList.add('hidden');
+            document.getElementById('tutorialCompleteModal').classList.add('hidden');
+
+            clearTutorialHighlights();
         }
 
         // ===== SEO META TAG UPDATES =====
