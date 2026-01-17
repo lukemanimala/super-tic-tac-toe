@@ -1044,11 +1044,11 @@
         .tutorial-tooltip {
             position: fixed;
             background: white;
-            padding: 20px 25px;
-            border-radius: 15px;
+            padding: 15px 20px;
+            border-radius: 12px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.4);
             z-index: 1100;
-            max-width: 350px;
+            max-width: 320px;
             font-family: 'Space Grotesk', sans-serif;
             animation: tooltipFadeIn 0.3s ease;
         }
@@ -1060,41 +1060,42 @@
 
         .tutorial-tooltip h3 {
             color: #667eea;
-            margin: 0 0 10px 0;
-            font-size: 1.2em;
+            margin: 0 0 6px 0;
+            font-size: 1.1em;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .tutorial-tooltip p {
             color: #333;
-            margin: 0 0 15px 0;
-            line-height: 1.5;
-            font-size: 15px;
+            margin: 0 0 10px 0;
+            line-height: 1.4;
+            font-size: 14px;
         }
 
         .tutorial-tooltip .step-indicator {
-            font-size: 12px;
+            font-size: 11px;
             color: #999;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
 
         .tutorial-buttons {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             justify-content: flex-end;
-            margin-top: 15px;
+            margin-top: 10px;
+            align-items: center;
         }
 
         .tutorial-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 10px 20px;
-            font-size: 14px;
+            padding: 8px 16px;
+            font-size: 13px;
             font-weight: 700;
-            border-radius: 20px;
+            border-radius: 18px;
             cursor: pointer;
             transition: all 0.3s ease;
             font-family: 'Space Grotesk', sans-serif;
@@ -1279,27 +1280,79 @@
 
         @media screen and (max-width: 768px) {
             .tutorial-tooltip {
-                max-width: 300px;
-                padding: 15px 20px;
-                font-size: 14px;
+                max-width: calc(100vw - 30px);
+                padding: 12px 15px;
+                font-size: 13px;
             }
 
             .tutorial-tooltip h3 {
-                font-size: 1.1em;
+                font-size: 1em;
+                margin-bottom: 4px;
             }
 
             .tutorial-tooltip p {
-                font-size: 14px;
+                font-size: 13px;
+                line-height: 1.35;
+                margin-bottom: 8px;
+            }
+
+            .tutorial-tooltip .step-indicator {
+                font-size: 10px;
+            }
+
+            .tutorial-progress-dot {
+                width: 6px;
+                height: 6px;
+            }
+
+            .tutorial-buttons {
+                margin-top: 8px;
+                gap: 6px;
+            }
+
+            .tutorial-btn {
+                padding: 6px 12px;
+                font-size: 12px;
             }
 
             .tutorial-intro-content,
             .tutorial-complete-content {
-                padding: 30px 20px;
+                padding: 25px 15px;
             }
 
             .tutorial-intro-content h2,
             .tutorial-complete-content h2 {
-                font-size: 1.6em;
+                font-size: 1.4em;
+            }
+
+            .tutorial-intro-content p,
+            .tutorial-complete-content p {
+                font-size: 0.95em;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .tutorial-tooltip {
+                max-width: calc(100vw - 20px);
+                padding: 10px 12px;
+            }
+
+            .tutorial-tooltip h3 {
+                font-size: 0.95em;
+            }
+
+            .tutorial-tooltip p {
+                font-size: 12px;
+            }
+
+            .tutorial-progress {
+                gap: 4px;
+                margin-bottom: 8px;
+            }
+
+            .tutorial-progress-dot {
+                width: 5px;
+                height: 5px;
             }
         }
     </style>
@@ -4123,6 +4176,39 @@ ${logText}
             },
             {
                 type: 'info',
+                title: 'Uh Oh - Free Choice!',
+                text: 'You played in the CENTER cell of board 2, which means O should go to the CENTER board... but O already WON that board! When you send someone to a completed board, they get to play ANYWHERE.',
+                highlight: 'board-4'
+            },
+            {
+                type: 'ai-move',
+                title: 'O Plays Anywhere!',
+                text: 'Watch - since O has free choice, they can pick any open board. O will strategically choose board 6 (bottom-left) to start building toward a winning line...',
+                aiBoard: 6,
+                aiCell: 4
+            },
+            {
+                type: 'info',
+                title: 'Why Free Choice is Dangerous',
+                text: 'Giving your opponent free choice is usually BAD strategy. They can pick the best board for themselves! Always think: "Where am I sending my opponent?" before you move.',
+                highlight: 'board-6'
+            },
+            {
+                type: 'action',
+                title: 'Your Response',
+                text: 'O sent you to board 4, but it\'s completed - so YOU get free choice now! Play in board 3 (middle-left) to block O from building a diagonal.',
+                targetBoard: 3,
+                targetCell: 4,
+                highlight: 'cell'
+            },
+            {
+                type: 'info',
+                title: 'Strategic Tip',
+                text: 'Notice how you used YOUR free choice wisely - you picked a board that helps block O\'s potential winning lines. Free choice is powerful when YOU have it!',
+                highlight: 'board-3'
+            },
+            {
+                type: 'info',
                 title: 'The Ultimate Goal',
                 text: 'Remember: Win 3 mini boards in a row (horizontally, vertically, or diagonally) to win the whole game! Think of the 9 mini boards like one big Tic-Tac-Toe board.',
                 highlight: 'macroBoard'
@@ -4130,7 +4216,7 @@ ${logText}
             {
                 type: 'complete',
                 title: 'You Got It!',
-                text: 'You understand the basics! The strategy is deep - every move affects where your opponent can play. Ready to test your skills?'
+                text: 'You understand the basics! The strategy is deep - every move affects where your opponent can play. Avoid giving free choice when possible, and use it wisely when you have it!'
             }
         ];
 
@@ -4257,19 +4343,26 @@ ${logText}
             // Reset arrow classes
             arrow.className = 'tutorial-arrow';
 
-            const tooltipWidth = 350;
-            const tooltipHeight = 200;
-            const padding = 20;
+            // Get actual tooltip dimensions
+            tooltip.style.visibility = 'hidden';
+            tooltip.style.display = 'block';
+            const tooltipRect = tooltip.getBoundingClientRect();
+            const tooltipWidth = Math.min(350, window.innerWidth - 40);
+            const tooltipHeight = tooltipRect.height || 180;
+            tooltip.style.visibility = '';
 
+            const padding = 15;
             let left, top;
 
-            if (position === 'below') {
-                left = rect.left + rect.width / 2 - tooltipWidth / 2;
-                top = rect.bottom + padding;
-                arrow.classList.add('up');
+            if (position === 'top' || position === 'below') {
+                // For macro board, position at top of viewport
+                left = (window.innerWidth - tooltipWidth) / 2;
+                top = 80; // Fixed position near top
+                arrow.style.display = 'none'; // Hide arrow for centered tooltip
             } else if (position === 'right') {
+                arrow.style.display = '';
                 left = rect.right + padding;
-                top = rect.top + rect.height / 2 - tooltipHeight / 2;
+                top = rect.top;
                 arrow.classList.add('left');
 
                 // If tooltip would go off screen right, position left instead
@@ -4277,14 +4370,27 @@ ${logText}
                     left = rect.left - tooltipWidth - padding;
                     arrow.className = 'tutorial-arrow right';
                 }
+
+                // If tooltip would go off screen bottom, position it higher
+                if (top + tooltipHeight > window.innerHeight - 20) {
+                    top = window.innerHeight - tooltipHeight - 20;
+                }
+
+                // If still problematic on mobile, center at top
+                if (window.innerWidth < 600) {
+                    left = (window.innerWidth - tooltipWidth) / 2;
+                    top = 80;
+                    arrow.style.display = 'none';
+                }
             }
 
             // Clamp to viewport
-            left = Math.max(20, Math.min(left, window.innerWidth - tooltipWidth - 20));
-            top = Math.max(20, Math.min(top, window.innerHeight - tooltipHeight - 20));
+            left = Math.max(10, Math.min(left, window.innerWidth - tooltipWidth - 10));
+            top = Math.max(10, Math.min(top, window.innerHeight - tooltipHeight - 20));
 
             tooltip.style.left = left + 'px';
             tooltip.style.top = top + 'px';
+            tooltip.style.maxWidth = tooltipWidth + 'px';
         }
 
         function clearTutorialHighlights() {
